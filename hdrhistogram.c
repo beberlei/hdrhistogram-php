@@ -11,13 +11,16 @@
 static int le_hdrhistogram_descriptor;
 
 zend_function_entry hdrhistogram_functions[] = {
-	PHP_FE(hdr_create, NULL)
+	PHP_FE(hdr_init, NULL)
 	PHP_FE(hdr_get_memory_size, NULL)
 	PHP_FE(hdr_record_value, NULL)
 	PHP_FE(hdr_record_values, NULL)
+	PHP_FE(hdr_record_corrected_value, NULL)
 	PHP_FE(hdr_mean, NULL)
 	PHP_FE(hdr_min, NULL)
 	PHP_FE(hdr_max, NULL)
+	PHP_FE(hdr_reset, NULL)
+	PHP_FE(hdr_count_at_value, NULL)
 	{ NULL, NULL, NULL }
 };
 
@@ -74,7 +77,7 @@ PHP_MINFO_FUNCTION(hdrhistogram)
 {
 }
 
-PHP_FUNCTION(hdr_create)
+PHP_FUNCTION(hdr_init)
 {
 	struct hdr_histogram *hdr;
 	long lowest_trackable_value, highest_trackable_value, significant_figures, res;
@@ -184,4 +187,49 @@ PHP_FUNCTION(hdr_record_values)
 	ZEND_FETCH_RESOURCE(hdr, struct hdr_histogram *, &zhdr, -1, PHP_HDRHISTOGRAM_DESCRIPTOR_RES_NAME, le_hdrhistogram_descriptor);
 
 	hdr_record_values(hdr, value, count);
+}
+
+PHP_FUNCTION(hdr_record_corrected_value)
+{
+	struct hdr_histogram *hdr;
+	zval *zhdr;
+	long value;
+	long expected_interval;
+
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "rll", &zhdr, &value, &expected_interval) == FAILURE) {
+		RETURN_FALSE;
+	}
+
+	ZEND_FETCH_RESOURCE(hdr, struct hdr_histogram *, &zhdr, -1, PHP_HDRHISTOGRAM_DESCRIPTOR_RES_NAME, le_hdrhistogram_descriptor);
+
+	hdr_record_corrected_value(hdr, value, expected_interval);
+}
+
+PHP_FUNCTION(hdr_reset)
+{
+	struct hdr_histogram *hdr;
+	zval *zhdr;
+
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "r", &zhdr) == FAILURE) {
+		RETURN_FALSE;
+	}
+
+	ZEND_FETCH_RESOURCE(hdr, struct hdr_histogram *, &zhdr, -1, PHP_HDRHISTOGRAM_DESCRIPTOR_RES_NAME, le_hdrhistogram_descriptor);
+
+	hdr_reset(hdr);
+}
+
+PHP_FUNCTION(hdr_count_at_value)
+{
+	struct hdr_histogram *hdr;
+	zval *zhdr;
+	long value;
+
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "rl", &zhdr, &value) == FAILURE) {
+		RETURN_FALSE;
+	}
+
+	ZEND_FETCH_RESOURCE(hdr, struct hdr_histogram *, &zhdr, -1, PHP_HDRHISTOGRAM_DESCRIPTOR_RES_NAME, le_hdrhistogram_descriptor);
+
+	RETURN_LONG(hdr_count_at_value(hdr, value));
 }

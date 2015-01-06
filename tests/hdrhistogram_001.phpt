@@ -4,7 +4,7 @@ Author: kontakt@beberlei.de
 --FILE--
 <?php
 
-$hdr = hdr_create(1, 360000, 3);
+$hdr = hdr_init(1, 360000, 3);
 var_dump($hdr);
 echo "Memory: " . hdr_get_memory_size($hdr) . "\n";
 
