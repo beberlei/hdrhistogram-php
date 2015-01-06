@@ -10,6 +10,7 @@
 
 static int le_hdrhistogram_descriptor;
 static int le_hdrhistogram_iter_descriptor;
+static int le_hdrhistogram_percentile_iter_descriptor;
 
 zend_function_entry hdrhistogram_functions[] = {
 	PHP_FE(hdr_init, NULL)
@@ -28,6 +29,9 @@ zend_function_entry hdrhistogram_functions[] = {
 	PHP_FE(hdr_iter_init, NULL)
 	PHP_FE(hdr_iter_current, NULL)
 	PHP_FE(hdr_iter_next, NULL)
+	PHP_FE(hdr_percentile_iter_init, NULL)
+	PHP_FE(hdr_percentile_iter_current, NULL)
+	PHP_FE(hdr_percentile_iter_next, NULL)
 	{ NULL, NULL, NULL }
 };
 
@@ -66,6 +70,13 @@ PHP_MINIT_FUNCTION(hdrhistogram)
 		php_hdrhistogram_descriptor_dtor,
 		NULL,
 		"hdr_iterator",
+		module_number
+	);
+
+	le_hdrhistogram_percentile_iter_descriptor = zend_register_list_destructors_ex(
+		php_hdrhistogram_descriptor_dtor,
+		NULL,
+		"hdr_percentile_iterator",
 		module_number
 	);
 
@@ -365,6 +376,55 @@ PHP_FUNCTION(hdr_iter_next)
 		add_assoc_long(return_value, "count_at_index", iterator->count_at_index);
 		add_assoc_long(return_value, "count_to_index", iterator->count_to_index);
 		add_assoc_long(return_value, "highest_equivalent_value", iterator->highest_equivalent_value);
+	} else {
+		RETURN_FALSE;
+	}
+}
+
+PHP_FUNCTION(hdr_percentile_iter_init)
+{
+	struct hdr_percentile_iter *iterator;
+	struct hdr_histogram *hdr;
+	zval *zhdr;
+	long ticks_per_half_distance;
+
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "rl", &zhdr, &ticks_per_half_distance) == FAILURE) {
+		RETURN_FALSE;
+	}
+
+	ZEND_FETCH_RESOURCE(hdr, struct hdr_histogram *, &zhdr, -1, PHP_HDRHISTOGRAM_DESCRIPTOR_RES_NAME, le_hdrhistogram_descriptor);
+
+	iterator = malloc(sizeof(struct hdr_percentile_iter));
+	hdr_percentile_iter_init(iterator, hdr, ticks_per_half_distance);
+
+	ZEND_REGISTER_RESOURCE(return_value, iterator, le_hdrhistogram_percentile_iter_descriptor);
+}
+
+PHP_FUNCTION(hdr_percentile_iter_current)
+{
+}
+
+PHP_FUNCTION(hdr_percentile_iter_next)
+{
+	struct hdr_percentile_iter *iterator;
+	zval *zhdr;
+
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "r", &zhdr) == FAILURE) {
+		RETURN_FALSE;
+	}
+
+	ZEND_FETCH_RESOURCE(iterator, struct hdr_percentile_iter *, &zhdr, -1, "hdr_percentile_iterator", le_hdrhistogram_percentile_iter_descriptor);
+
+	if (hdr_percentile_iter_next(iterator) == 1) {
+		array_init(return_value);
+		add_assoc_long(return_value, "value", iterator->iter.value_from_index);
+		add_assoc_long(return_value, "count_at_index", iterator->iter.count_at_index);
+		add_assoc_long(return_value, "count_to_index", iterator->iter.count_to_index);
+		add_assoc_long(return_value, "highest_equivalent_value", iterator->iter.highest_equivalent_value);
+		add_assoc_long(return_value, "seen_last_value", iterator->seen_last_value);
+		add_assoc_long(return_value, "ticks_per_half_distance", iterator->ticks_per_half_distance);
+		add_assoc_double(return_value, "percentile_to_iterate_to", iterator->percentile_to_iterate_to);
+		add_assoc_double(return_value, "percentile", iterator->percentile);
 	} else {
 		RETURN_FALSE;
 	}
