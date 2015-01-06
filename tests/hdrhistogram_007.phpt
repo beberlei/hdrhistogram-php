@@ -10,7 +10,7 @@ hdr_record_value($a, 2);
 hdr_record_values($a, 3, 10);
 
 $iterator = hdr_iter_init($a);
-var_dump(hdr_iter_current($iterator));
+var_dump(hdr_iter_next($iterator));
 var_dump(hdr_iter_next($iterator));
 var_dump(hdr_iter_next($iterator));
 var_dump(hdr_iter_next($iterator));

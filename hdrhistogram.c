@@ -27,10 +27,8 @@ zend_function_entry hdrhistogram_functions[] = {
 	PHP_FE(hdr_add, NULL)
 	PHP_FE(hdr_merge_into, NULL)
 	PHP_FE(hdr_iter_init, NULL)
-	PHP_FE(hdr_iter_current, NULL)
 	PHP_FE(hdr_iter_next, NULL)
 	PHP_FE(hdr_percentile_iter_init, NULL)
-	PHP_FE(hdr_percentile_iter_current, NULL)
 	PHP_FE(hdr_percentile_iter_next, NULL)
 	{ NULL, NULL, NULL }
 };
@@ -334,29 +332,7 @@ PHP_FUNCTION(hdr_iter_init)
 	iterator = malloc(sizeof(struct hdr_iter));
 	hdr_iter_init(iterator, hdr);
 
-	if (hdr_iter_next(iterator) == 1) {
-		ZEND_REGISTER_RESOURCE(return_value, iterator, le_hdrhistogram_iter_descriptor);
-	} else {
-		RETURN_FALSE;
-	}
-}
-
-PHP_FUNCTION(hdr_iter_current)
-{
-	struct hdr_iter *iterator;
-	zval *zhdr;
-
-	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "r", &zhdr) == FAILURE) {
-		RETURN_FALSE;
-	}
-
-	ZEND_FETCH_RESOURCE(iterator, struct hdr_iter *, &zhdr, -1, "hdr_iterator", le_hdrhistogram_iter_descriptor);
-
-	array_init(return_value);
-	add_assoc_long(return_value, "value", iterator->value_from_index);
-	add_assoc_long(return_value, "count_at_index", iterator->count_at_index);
-	add_assoc_long(return_value, "count_to_index", iterator->count_to_index);
-	add_assoc_long(return_value, "highest_equivalent_value", iterator->highest_equivalent_value);
+	ZEND_REGISTER_RESOURCE(return_value, iterator, le_hdrhistogram_iter_descriptor);
 }
 
 PHP_FUNCTION(hdr_iter_next)
@@ -398,10 +374,6 @@ PHP_FUNCTION(hdr_percentile_iter_init)
 	hdr_percentile_iter_init(iterator, hdr, ticks_per_half_distance);
 
 	ZEND_REGISTER_RESOURCE(return_value, iterator, le_hdrhistogram_percentile_iter_descriptor);
-}
-
-PHP_FUNCTION(hdr_percentile_iter_current)
-{
 }
 
 PHP_FUNCTION(hdr_percentile_iter_next)
