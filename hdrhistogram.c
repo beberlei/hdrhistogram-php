@@ -9,6 +9,7 @@
 #define PHP_HDRHISTOGRAM_DESCRIPTOR_RES_NAME "hdr_histogram"
 
 static int le_hdrhistogram_descriptor;
+static int le_hdrhistogram_iter_descriptor;
 
 zend_function_entry hdrhistogram_functions[] = {
 	PHP_FE(hdr_init, NULL)
@@ -24,6 +25,9 @@ zend_function_entry hdrhistogram_functions[] = {
 	PHP_FE(hdr_value_at_percentile, NULL)
 	PHP_FE(hdr_add, NULL)
 	PHP_FE(hdr_merge_into, NULL)
+	PHP_FE(hdr_iter_init, NULL)
+	PHP_FE(hdr_iter_current, NULL)
+	PHP_FE(hdr_iter_next, NULL)
 	{ NULL, NULL, NULL }
 };
 
@@ -55,6 +59,13 @@ PHP_MINIT_FUNCTION(hdrhistogram)
 		php_hdrhistogram_descriptor_dtor,
 		NULL,
 		PHP_HDRHISTOGRAM_DESCRIPTOR_RES_NAME,
+		module_number
+	);
+
+	le_hdrhistogram_iter_descriptor = zend_register_list_destructors_ex(
+		php_hdrhistogram_descriptor_dtor,
+		NULL,
+		"hdr_iterator",
 		module_number
 	);
 
@@ -295,4 +306,66 @@ PHP_FUNCTION(hdr_merge_into)
 	ZEND_FETCH_RESOURCE(hdrb, struct hdr_histogram *, &b, -1, PHP_HDRHISTOGRAM_DESCRIPTOR_RES_NAME, le_hdrhistogram_descriptor);
 
 	RETURN_LONG(hdr_add(hdra, hdrb));
+}
+
+PHP_FUNCTION(hdr_iter_init)
+{
+	struct hdr_iter *iterator;
+	struct hdr_histogram *hdr;
+	zval *zhdr;
+
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "r", &zhdr) == FAILURE) {
+		RETURN_FALSE;
+	}
+
+	ZEND_FETCH_RESOURCE(hdr, struct hdr_histogram *, &zhdr, -1, PHP_HDRHISTOGRAM_DESCRIPTOR_RES_NAME, le_hdrhistogram_descriptor);
+
+	iterator = malloc(sizeof(struct hdr_iter));
+	hdr_iter_init(iterator, hdr);
+
+	if (hdr_iter_next(iterator) == 1) {
+		ZEND_REGISTER_RESOURCE(return_value, iterator, le_hdrhistogram_iter_descriptor);
+	} else {
+		RETURN_FALSE;
+	}
+}
+
+PHP_FUNCTION(hdr_iter_current)
+{
+	struct hdr_iter *iterator;
+	zval *zhdr;
+
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "r", &zhdr) == FAILURE) {
+		RETURN_FALSE;
+	}
+
+	ZEND_FETCH_RESOURCE(iterator, struct hdr_iter *, &zhdr, -1, "hdr_iterator", le_hdrhistogram_iter_descriptor);
+
+	array_init(return_value);
+	add_assoc_long(return_value, "value", iterator->value_from_index);
+	add_assoc_long(return_value, "count_at_index", iterator->count_at_index);
+	add_assoc_long(return_value, "count_to_index", iterator->count_to_index);
+	add_assoc_long(return_value, "highest_equivalent_value", iterator->highest_equivalent_value);
+}
+
+PHP_FUNCTION(hdr_iter_next)
+{
+	struct hdr_iter *iterator;
+	zval *zhdr;
+
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "r", &zhdr) == FAILURE) {
+		RETURN_FALSE;
+	}
+
+	ZEND_FETCH_RESOURCE(iterator, struct hdr_iter *, &zhdr, -1, "hdr_iterator", le_hdrhistogram_iter_descriptor);
+
+	if (hdr_iter_next(iterator) == 1) {
+		array_init(return_value);
+		add_assoc_long(return_value, "value", iterator->value_from_index);
+		add_assoc_long(return_value, "count_at_index", iterator->count_at_index);
+		add_assoc_long(return_value, "count_to_index", iterator->count_to_index);
+		add_assoc_long(return_value, "highest_equivalent_value", iterator->highest_equivalent_value);
+	} else {
+		RETURN_FALSE;
+	}
 }
