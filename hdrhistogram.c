@@ -23,6 +23,7 @@ zend_function_entry hdrhistogram_functions[] = {
 	PHP_FE(hdr_count_at_value, NULL)
 	PHP_FE(hdr_value_at_percentile, NULL)
 	PHP_FE(hdr_add, NULL)
+	PHP_FE(hdr_merge_into, NULL)
 	{ NULL, NULL, NULL }
 };
 
@@ -279,4 +280,19 @@ PHP_FUNCTION(hdr_add)
 	} else if (res == ENOMEM) {
 		perror("Memory error in hdr_init allocation.");
 	}
+}
+
+PHP_FUNCTION(hdr_merge_into)
+{
+	struct hdr_histogram *hdra, *hdrb;
+	zval *a, *b;
+
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "rr", &a, &b) == FAILURE) {
+		RETURN_FALSE;
+	}
+
+	ZEND_FETCH_RESOURCE(hdra, struct hdr_histogram *, &a, -1, PHP_HDRHISTOGRAM_DESCRIPTOR_RES_NAME, le_hdrhistogram_descriptor);
+	ZEND_FETCH_RESOURCE(hdrb, struct hdr_histogram *, &b, -1, PHP_HDRHISTOGRAM_DESCRIPTOR_RES_NAME, le_hdrhistogram_descriptor);
+
+	RETURN_LONG(hdr_add(hdra, hdrb));
 }
