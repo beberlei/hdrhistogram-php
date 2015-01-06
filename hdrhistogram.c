@@ -21,6 +21,7 @@ zend_function_entry hdrhistogram_functions[] = {
 	PHP_FE(hdr_max, NULL)
 	PHP_FE(hdr_reset, NULL)
 	PHP_FE(hdr_count_at_value, NULL)
+	PHP_FE(hdr_value_at_percentile, NULL)
 	{ NULL, NULL, NULL }
 };
 
@@ -232,4 +233,19 @@ PHP_FUNCTION(hdr_count_at_value)
 	ZEND_FETCH_RESOURCE(hdr, struct hdr_histogram *, &zhdr, -1, PHP_HDRHISTOGRAM_DESCRIPTOR_RES_NAME, le_hdrhistogram_descriptor);
 
 	RETURN_LONG(hdr_count_at_value(hdr, value));
+}
+
+PHP_FUNCTION(hdr_value_at_percentile)
+{
+	struct hdr_histogram *hdr;
+	zval *zhdr;
+	double percentile;
+
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "rd", &zhdr, &percentile) == FAILURE) {
+		RETURN_FALSE;
+	}
+
+	ZEND_FETCH_RESOURCE(hdr, struct hdr_histogram *, &zhdr, -1, PHP_HDRHISTOGRAM_DESCRIPTOR_RES_NAME, le_hdrhistogram_descriptor);
+
+	RETURN_LONG(hdr_value_at_percentile(hdr, percentile));
 }
