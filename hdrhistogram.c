@@ -77,7 +77,7 @@ PHP_MINFO_FUNCTION(hdrhistogram)
 PHP_FUNCTION(hdr_create)
 {
 	struct hdr_histogram *hdr;
-	int lowest_trackable_value, highest_trackable_value, significant_figures, res;
+	long lowest_trackable_value, highest_trackable_value, significant_figures, res;
 
 	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "lll",
 				&lowest_trackable_value, &highest_trackable_value, &significant_figures) == FAILURE) {
@@ -159,7 +159,7 @@ PHP_FUNCTION(hdr_record_value)
 {
 	struct hdr_histogram *hdr;
 	zval *zhdr;
-	int value;
+	long value;
 
 	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "rl", &zhdr, &value) == FAILURE) {
 		RETURN_FALSE;
@@ -174,8 +174,8 @@ PHP_FUNCTION(hdr_record_values)
 {
 	struct hdr_histogram *hdr;
 	zval *zhdr;
-	int value;
-	int count;
+	long value;
+	long count;
 
 	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "rll", &zhdr, &value, &count) == FAILURE) {
 		RETURN_FALSE;

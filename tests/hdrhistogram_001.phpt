@@ -15,13 +15,14 @@ hdr_record_value($hdr, 3);
 
 echo "Mean: " . hdr_mean($hdr) . "\n";
 echo "Min: " . hdr_min($hdr) . "\n";
-echo "Max: " . hdr_max($hdr);
+echo "Max: " . hdr_max($hdr) . "\n";
 
 hdr_record_values($hdr, 4, 2);
-echo "Mean: " . hdr_mean($hdr) . "\n";
+echo "Max: " . hdr_max($hdr) . "\n";
 --EXPECT--
 resource(4) of type (hdr_histogram)
 Memory: 82048
 Mean: 2
 Min: 1
 Max: 3
+Max: 4
