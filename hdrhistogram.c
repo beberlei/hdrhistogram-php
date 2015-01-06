@@ -22,6 +22,7 @@ zend_function_entry hdrhistogram_functions[] = {
 	PHP_FE(hdr_reset, NULL)
 	PHP_FE(hdr_count_at_value, NULL)
 	PHP_FE(hdr_value_at_percentile, NULL)
+	PHP_FE(hdr_add, NULL)
 	{ NULL, NULL, NULL }
 };
 
@@ -81,7 +82,8 @@ PHP_MINFO_FUNCTION(hdrhistogram)
 PHP_FUNCTION(hdr_init)
 {
 	struct hdr_histogram *hdr;
-	long lowest_trackable_value, highest_trackable_value, significant_figures, res;
+	long lowest_trackable_value, highest_trackable_value, significant_figures;
+	int res;
 
 	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "lll",
 				&lowest_trackable_value, &highest_trackable_value, &significant_figures) == FAILURE) {
@@ -248,4 +250,33 @@ PHP_FUNCTION(hdr_value_at_percentile)
 	ZEND_FETCH_RESOURCE(hdr, struct hdr_histogram *, &zhdr, -1, PHP_HDRHISTOGRAM_DESCRIPTOR_RES_NAME, le_hdrhistogram_descriptor);
 
 	RETURN_LONG(hdr_value_at_percentile(hdr, percentile));
+}
+
+PHP_FUNCTION(hdr_add)
+{
+	struct hdr_histogram *hdra, *hdrb, *hdr_new;
+	zval *a, *b;
+	int res;
+
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "rr", &a, &b) == FAILURE) {
+		RETURN_FALSE;
+	}
+
+	ZEND_FETCH_RESOURCE(hdra, struct hdr_histogram *, &a, -1, PHP_HDRHISTOGRAM_DESCRIPTOR_RES_NAME, le_hdrhistogram_descriptor);
+	ZEND_FETCH_RESOURCE(hdrb, struct hdr_histogram *, &b, -1, PHP_HDRHISTOGRAM_DESCRIPTOR_RES_NAME, le_hdrhistogram_descriptor);
+
+	res = hdr_init(hdra->lowest_trackable_value, hdra->highest_trackable_value, hdra->significant_figures, &hdr_new);
+
+	hdr_add(hdr_new, hdra);
+	hdr_add(hdr_new, hdrb);
+
+	if (res == 0) {
+		ZEND_REGISTER_RESOURCE(return_value, hdr_new, le_hdrhistogram_descriptor);
+	} else if (res == EINVAL) {
+		php_error_docref(NULL TSRMLS_CC, E_WARNING, "Lowest trackable value has to be >= 1.");
+
+		RETURN_FALSE;
+	} else if (res == ENOMEM) {
+		perror("Memory error in hdr_init allocation.");
+	}
 }

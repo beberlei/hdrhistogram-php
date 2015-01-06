@@ -23,5 +23,6 @@ PHP_FUNCTION(hdr_record_corrected_value);
 PHP_FUNCTION(hdr_reset);
 PHP_FUNCTION(hdr_count_at_value);
 PHP_FUNCTION(hdr_value_at_percentile);
+PHP_FUNCTION(hdr_add);
 
 #endif
