@@ -3,25 +3,21 @@
 #endif
 
 #include "php.h"
-#include "php_hdrhistogram.h"
 #include "hdr/hdr_histogram.h"
+#include "php_hdrhistogram.h"
 
-#define PHP_HDRHISTOGRAM_HISTOGRAM_NAME "HdrHistogram"
-#define PHP_HDRHISTOGRAM_DESCRIPTOR_RES_NAME "HdrHistogram Resource Descriptor"
+#define PHP_HDRHISTOGRAM_DESCRIPTOR_RES_NAME "hdr_histogram"
 
 static int le_hdrhistogram_descriptor;
 
 zend_function_entry hdrhistogram_functions[] = {
-	{ NULL, NULL, NULL }
-};
-
-zend_class_entry *php_hdrhistogram_histogram_entry;
-static zend_function_entry php_hdrhistogram_histogram_functions[] = {
-	PHP_ME(HdrHistogram, __construct, NULL, ZEND_ACC_PUBLIC|ZEND_ACC_CTOR)
-	PHP_ME(HdrHistogram, recordValue, NULL, ZEND_ACC_PUBLIC)
-	PHP_ME(HdrHistogram, mean, NULL, ZEND_ACC_PUBLIC)
-	PHP_ME(HdrHistogram, min, NULL, ZEND_ACC_PUBLIC)
-	PHP_ME(HdrHistogram, max, NULL, ZEND_ACC_PUBLIC)
+	PHP_FE(hdr_create, NULL)
+	PHP_FE(hdr_get_memory_size, NULL)
+	PHP_FE(hdr_record_value, NULL)
+	PHP_FE(hdr_record_values, NULL)
+	PHP_FE(hdr_mean, NULL)
+	PHP_FE(hdr_min, NULL)
+	PHP_FE(hdr_max, NULL)
 	{ NULL, NULL, NULL }
 };
 
@@ -49,13 +45,11 @@ static void php_hdrhistogram_descriptor_dtor(zend_rsrc_list_entry *rsrc TSRMLS_D
 
 PHP_MINIT_FUNCTION(hdrhistogram)
 {
-	zend_class_entry ce;
-
-	INIT_CLASS_ENTRY(ce, PHP_HDRHISTOGRAM_HISTOGRAM_NAME, php_hdrhistogram_histogram_functions);
-	php_hdrhistogram_histogram_entry = zend_register_internal_class(&ce TSRMLS_CC);
-
 	le_hdrhistogram_descriptor = zend_register_list_destructors_ex(
-		NULL, NULL, PHP_HDRHISTOGRAM_DESCRIPTOR_RES_NAME, module_number
+		php_hdrhistogram_descriptor_dtor,
+		NULL,
+		PHP_HDRHISTOGRAM_DESCRIPTOR_RES_NAME,
+		module_number
 	);
 
 	return SUCCESS;
@@ -80,25 +74,114 @@ PHP_MINFO_FUNCTION(hdrhistogram)
 {
 }
 
-PHP_METHOD(HdrHistogram, __construct)
+PHP_FUNCTION(hdr_create)
 {
-	static struct hdr_histogram *hdr;
+	struct hdr_histogram *hdr;
+	int lowest_trackable_value, highest_trackable_value, significant_figures, res;
 
-	hdr_init(1, 1000, 5, &hdr);
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "lll",
+				&lowest_trackable_value, &highest_trackable_value, &significant_figures) == FAILURE) {
+		php_error_docref(NULL TSRMLS_CC, E_WARNING, "Invalid arguments passed.");
+
+		RETURN_FALSE;
+	}
+
+	res = hdr_init(lowest_trackable_value, highest_trackable_value, significant_figures, &hdr);
+
+	if (res == 0) {
+		ZEND_REGISTER_RESOURCE(return_value, hdr, le_hdrhistogram_descriptor);
+	} else if (res == EINVAL) {
+		php_error_docref(NULL TSRMLS_CC, E_WARNING, "Lowest trackable value has to be >= 1.");
+
+		RETURN_FALSE;
+	} else if (res == ENOMEM) {
+		perror("Memory error in hdr_init allocation.");
+	}
 }
 
-PHP_METHOD(HdrHistogram, recordValue)
+PHP_FUNCTION(hdr_get_memory_size)
 {
+	struct hdr_histogram *hdr;
+	zval *zhdr;
+
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "r", &zhdr) == FAILURE) {
+		RETURN_FALSE;
+	}
+
+	ZEND_FETCH_RESOURCE(hdr, struct hdr_histogram *, &zhdr, -1, PHP_HDRHISTOGRAM_DESCRIPTOR_RES_NAME, le_hdrhistogram_descriptor);
+
+	RETURN_LONG(hdr_get_memory_size(hdr));
 }
 
-PHP_METHOD(HdrHistogram, mean)
+PHP_FUNCTION(hdr_mean)
 {
+	struct hdr_histogram *hdr;
+	zval *zhdr;
+
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "r", &zhdr) == FAILURE) {
+		RETURN_FALSE;
+	}
+
+	ZEND_FETCH_RESOURCE(hdr, struct hdr_histogram *, &zhdr, -1, PHP_HDRHISTOGRAM_DESCRIPTOR_RES_NAME, le_hdrhistogram_descriptor);
+
+	RETURN_LONG(hdr_mean(hdr));
 }
 
-PHP_METHOD(HdrHistogram, min)
+PHP_FUNCTION(hdr_min)
 {
+	struct hdr_histogram *hdr;
+	zval *zhdr;
+
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "r", &zhdr) == FAILURE) {
+		RETURN_FALSE;
+	}
+
+	ZEND_FETCH_RESOURCE(hdr, struct hdr_histogram *, &zhdr, -1, PHP_HDRHISTOGRAM_DESCRIPTOR_RES_NAME, le_hdrhistogram_descriptor);
+
+	RETURN_LONG(hdr_min(hdr));
 }
 
-PHP_METHOD(HdrHistogram, max)
+PHP_FUNCTION(hdr_max)
 {
+	struct hdr_histogram *hdr;
+	zval *zhdr;
+
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "r", &zhdr) == FAILURE) {
+		RETURN_FALSE;
+	}
+
+	ZEND_FETCH_RESOURCE(hdr, struct hdr_histogram *, &zhdr, -1, PHP_HDRHISTOGRAM_DESCRIPTOR_RES_NAME, le_hdrhistogram_descriptor);
+
+	RETURN_LONG(hdr_max(hdr));
+}
+
+PHP_FUNCTION(hdr_record_value)
+{
+	struct hdr_histogram *hdr;
+	zval *zhdr;
+	int value;
+
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "rl", &zhdr, &value) == FAILURE) {
+		RETURN_FALSE;
+	}
+
+	ZEND_FETCH_RESOURCE(hdr, struct hdr_histogram *, &zhdr, -1, PHP_HDRHISTOGRAM_DESCRIPTOR_RES_NAME, le_hdrhistogram_descriptor);
+
+	hdr_record_value(hdr, value);
+}
+
+PHP_FUNCTION(hdr_record_values)
+{
+	struct hdr_histogram *hdr;
+	zval *zhdr;
+	int value;
+	int count;
+
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "rll", &zhdr, &value, &count) == FAILURE) {
+		RETURN_FALSE;
+	}
+
+	ZEND_FETCH_RESOURCE(hdr, struct hdr_histogram *, &zhdr, -1, PHP_HDRHISTOGRAM_DESCRIPTOR_RES_NAME, le_hdrhistogram_descriptor);
+
+	hdr_record_values(hdr, value, count);
 }
