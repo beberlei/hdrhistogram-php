@@ -4,6 +4,7 @@
 
 #include "php.h"
 #include "hdr/hdr_histogram.h"
+#include "hdr/hdr_histogram_log.h"
 #include "php_hdrhistogram.h"
 
 #define PHP_HDRHISTOGRAM_DESCRIPTOR_RES_NAME "hdr_histogram"
@@ -26,6 +27,8 @@ zend_function_entry hdrhistogram_functions[] = {
 	PHP_FE(hdr_value_at_percentile, NULL)
 	PHP_FE(hdr_add, NULL)
 	PHP_FE(hdr_merge_into, NULL)
+	PHP_FE(hdr_log_encode, NULL)
+	PHP_FE(hdr_log_decode, NULL)
 	PHP_FE(hdr_iter_init, NULL)
 	PHP_FE(hdr_iter_next, NULL)
 	PHP_FE(hdr_percentile_iter_init, NULL)
@@ -315,6 +318,43 @@ PHP_FUNCTION(hdr_merge_into)
 	ZEND_FETCH_RESOURCE(hdrb, struct hdr_histogram *, &b, -1, PHP_HDRHISTOGRAM_DESCRIPTOR_RES_NAME, le_hdrhistogram_descriptor);
 
 	RETURN_LONG(hdr_add(hdra, hdrb));
+}
+
+PHP_FUNCTION(hdr_log_encode)
+{
+	struct hdr_histogram *hdr;
+	zval *zhdr;
+	char *data;
+
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "r", &zhdr) == FAILURE) {
+		RETURN_FALSE;
+	}
+
+	ZEND_FETCH_RESOURCE(hdr, struct hdr_histogram *, &zhdr, -1, PHP_HDRHISTOGRAM_DESCRIPTOR_RES_NAME, le_hdrhistogram_descriptor);
+
+	hdr_log_encode(hdr, &data);
+
+	RETURN_STRING(data, 1);
+}
+
+PHP_FUNCTION(hdr_log_decode)
+{
+	struct hdr_histogram *hdr;
+	char *data;
+	int len, result;
+
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &data, &len) == FAILURE) {
+		RETURN_FALSE;
+	}
+
+	result = hdr_log_decode(&hdr, data, len);
+
+	if (result == 0) {
+		ZEND_REGISTER_RESOURCE(return_value, hdr, le_hdrhistogram_descriptor);
+	} else {
+		php_error_docref(NULL TSRMLS_CC, E_WARNING, "Could not decode binary hdrhistogram.");
+		RETURN_FALSE;
+	}
 }
 
 PHP_FUNCTION(hdr_iter_init)

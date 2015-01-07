@@ -25,6 +25,8 @@ PHP_FUNCTION(hdr_count_at_value);
 PHP_FUNCTION(hdr_value_at_percentile);
 PHP_FUNCTION(hdr_add);
 PHP_FUNCTION(hdr_merge_into);
+PHP_FUNCTION(hdr_log_encode);
+PHP_FUNCTION(hdr_log_decode);
 
 PHP_FUNCTION(hdr_iter_init);
 PHP_FUNCTION(hdr_iter_next);
