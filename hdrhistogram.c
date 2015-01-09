@@ -197,7 +197,11 @@ PHP_FUNCTION(hdr_record_value)
 
 	ZEND_FETCH_RESOURCE(hdr, struct hdr_histogram *, &zhdr, -1, PHP_HDRHISTOGRAM_DESCRIPTOR_RES_NAME, le_hdrhistogram_descriptor);
 
-	hdr_record_value(hdr, value);
+	if (hdr_record_value(hdr, value) == 0) {
+		RETURN_FALSE;
+	}
+
+	RETURN_TRUE;
 }
 
 PHP_FUNCTION(hdr_record_values)
@@ -213,7 +217,11 @@ PHP_FUNCTION(hdr_record_values)
 
 	ZEND_FETCH_RESOURCE(hdr, struct hdr_histogram *, &zhdr, -1, PHP_HDRHISTOGRAM_DESCRIPTOR_RES_NAME, le_hdrhistogram_descriptor);
 
-	hdr_record_values(hdr, value, count);
+	if (hdr_record_values(hdr, value, count) == 0) {
+		RETURN_FALSE;
+	}
+
+	RETURN_TRUE;
 }
 
 PHP_FUNCTION(hdr_record_corrected_value)

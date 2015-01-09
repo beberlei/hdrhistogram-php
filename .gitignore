@@ -57,3 +57,4 @@ tests/*.sh
 tests/*.log
 tests/*.exp
 run-tests.php
+.gdb_history

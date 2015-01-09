@@ -24,6 +24,7 @@ if test "$PHP_HDRHISTOGRAM" != "no"; then
     fi
 
     PHP_ADD_INCLUDE($HDRHISTOGRAM_PATH/include)
+    PHP_ADD_LIBRARY("hdr_histogram")
 
     LIBNAME=hdr_histogram
     LIBSYMBOL=hdr_init
