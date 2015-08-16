@@ -19,6 +19,7 @@ zend_function_entry hdrhistogram_functions[] = {
 	PHP_FE(hdr_record_values, NULL)
 	PHP_FE(hdr_record_corrected_value, NULL)
 	PHP_FE(hdr_mean, NULL)
+	PHP_FE(hdr_stddev, NULL)
 	PHP_FE(hdr_min, NULL)
 	PHP_FE(hdr_max, NULL)
 	PHP_FE(hdr_reset, NULL)
@@ -150,6 +151,21 @@ PHP_FUNCTION(hdr_mean)
 
 	RETURN_LONG(hdr_mean(hdr));
 }
+
+PHP_FUNCTION(hdr_stddev)
+{
+        struct hdr_histogram *hdr;
+        zval *zhdr;
+
+        if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "r", &zhdr) == FAILURE) {
+                RETURN_FALSE;
+        }
+
+        ZEND_FETCH_RESOURCE(hdr, struct hdr_histogram *, &zhdr, -1, PHP_HDRHISTOGRAM_DESCRIPTOR_RES_NAME, le_hdrhistogram_descriptor);
+
+        RETURN_DOUBLE(hdr_stddev(hdr));
+}
+
 
 PHP_FUNCTION(hdr_min)
 {
