@@ -425,9 +425,9 @@ PHP_FUNCTION(hdr_iter_next)
 
 	if (hdr_iter_next(iterator) == 1) {
 		array_init(return_value);
-		add_assoc_long(return_value, "value", iterator->value_from_index);
-		add_assoc_long(return_value, "count_at_index", iterator->count_at_index);
-		add_assoc_long(return_value, "count_to_index", iterator->count_to_index);
+		add_assoc_long(return_value, "value", iterator->value);
+		add_assoc_long(return_value, "count_at_index", iterator->count);
+		add_assoc_long(return_value, "count_to_index", iterator->cumulative_count);
 		add_assoc_long(return_value, "highest_equivalent_value", iterator->highest_equivalent_value);
 	} else {
 		RETURN_FALSE;
@@ -447,9 +447,9 @@ PHP_FUNCTION(hdr_percentile_iter_next)
 
 	if (hdr_iter_next(iterator) == 1) {
 		array_init(return_value);
-		add_assoc_long(return_value, "value", iterator->value_from_index);
-		add_assoc_long(return_value, "count_at_index", iterator->count_at_index);
-		add_assoc_long(return_value, "count_to_index", iterator->count_to_index);
+		add_assoc_long(return_value, "value", iterator->value);
+		add_assoc_long(return_value, "count_at_index", iterator->count);
+		add_assoc_long(return_value, "count_to_index", iterator->cumulative_count);
 		add_assoc_long(return_value, "highest_equivalent_value", iterator->highest_equivalent_value);
 		add_assoc_long(return_value, "seen_last_value", iterator->specifics.percentiles.seen_last_value);
 		add_assoc_long(return_value, "ticks_per_half_distance", iterator->specifics.percentiles.ticks_per_half_distance);
