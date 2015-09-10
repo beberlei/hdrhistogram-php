@@ -423,7 +423,7 @@ PHP_FUNCTION(hdr_iter_next)
 
 	ZEND_FETCH_RESOURCE(iterator, struct hdr_iter *, &zhdr, -1, "hdr_iterator", le_hdrhistogram_iter_descriptor);
 
-	if (hdr_iter_next(iterator) == 1) {
+	if (hdr_iter_next(iterator)) {
 		array_init(return_value);
 		add_assoc_long(return_value, "value", iterator->value);
 		add_assoc_long(return_value, "count_at_index", iterator->count);
@@ -445,7 +445,7 @@ PHP_FUNCTION(hdr_percentile_iter_next)
 
 	ZEND_FETCH_RESOURCE(iterator, struct hdr_iter *, &zhdr, -1, "hdr_iterator", le_hdrhistogram_iter_descriptor);
 
-	if (hdr_iter_next(iterator) == 1) {
+	if (hdr_iter_next(iterator)) {
 		array_init(return_value);
 		add_assoc_long(return_value, "value", iterator->value);
 		add_assoc_long(return_value, "count_at_index", iterator->count);
