@@ -10,22 +10,12 @@ hdr_record_value($a, 2);
 hdr_record_values($a, 3, 10);
 
 $iterator = hdr_iter_init($a);
-var_dump(hdr_iter_next($iterator));
-var_dump(hdr_iter_next($iterator));
-var_dump(hdr_iter_next($iterator));
-var_dump(hdr_iter_next($iterator));
-var_dump(hdr_iter_next($iterator));
---EXPECT--
-array(4) {
-  ["value"]=>
-  int(0)
-  ["count_at_index"]=>
-  int(0)
-  ["count_to_index"]=>
-  int(0)
-  ["highest_equivalent_value"]=>
-  int(0)
+while ($data = hdr_iter_next($iterator)) {
+    if ($data['count_at_index']) {
+        var_dump($data);
+    }
 }
+--EXPECT--
 array(4) {
   ["value"]=>
   int(1)
@@ -56,4 +46,3 @@ array(4) {
   ["highest_equivalent_value"]=>
   int(3)
 }
-bool(false)
