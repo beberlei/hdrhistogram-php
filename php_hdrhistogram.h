@@ -15,6 +15,7 @@ PHP_MINFO_FUNCTION(hdrhistogram);
 PHP_FUNCTION(hdr_init);
 PHP_FUNCTION(hdr_get_memory_size);
 PHP_FUNCTION(hdr_mean);
+PHP_FUNCTION(hdr_stddev);
 PHP_FUNCTION(hdr_min);
 PHP_FUNCTION(hdr_max);
 PHP_FUNCTION(hdr_record_value);
