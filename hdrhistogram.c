@@ -12,6 +12,30 @@
 static int le_hdrhistogram_descriptor;
 static int le_hdrhistogram_iter_descriptor;
 
+static zend_always_inline struct hdr_histogram* hdr_fetch_resource(zval *res, zval *return_value)
+{
+	struct hdr_histogram *hdr;
+
+#if PHP_VERSION_ID >= 70000
+	return (struct hdr_histogram*)zend_fetch_resource(Z_RES_P(res), PHP_HDRHISTOGRAM_DESCRIPTOR_RES_NAME, le_hdrhistogram_descriptor);
+#else
+	ZEND_FETCH_RESOURCE(hdr, struct hdr_histogram *, &res, -1, PHP_HDRHISTOGRAM_DESCRIPTOR_RES_NAME, le_hdrhistogram_descriptor);
+	return hdr;
+#endif
+}
+
+static zend_always_inline struct hdr_iter* hdr_fetch_iterator(zval *res, zval *return_value)
+{
+	struct hdr_iter *iterator;
+
+#if PHP_VERSION_ID >= 70000
+	return (struct hdr_iter*)zend_fetch_resource(Z_RES_P(res), "hdr_iterator", le_hdrhistogram_iter_descriptor);
+#else
+	ZEND_FETCH_RESOURCE(iterator, struct hdr_iter *, &res, -1, "hdr_iterator", le_hdrhistogram_iter_descriptor);
+	return iterator;
+#endif
+}
+
 zend_function_entry hdrhistogram_functions[] = {
 	PHP_FE(hdr_init, NULL)
 	PHP_FE(hdr_get_memory_size, NULL)
@@ -133,7 +157,7 @@ PHP_FUNCTION(hdr_get_memory_size)
 		RETURN_FALSE;
 	}
 
-	ZEND_FETCH_RESOURCE(hdr, struct hdr_histogram *, &zhdr, -1, PHP_HDRHISTOGRAM_DESCRIPTOR_RES_NAME, le_hdrhistogram_descriptor);
+	hdr = hdr_fetch_resource(zhdr, return_value);
 
 	RETURN_LONG(hdr_get_memory_size(hdr));
 }
@@ -147,23 +171,23 @@ PHP_FUNCTION(hdr_mean)
 		RETURN_FALSE;
 	}
 
-	ZEND_FETCH_RESOURCE(hdr, struct hdr_histogram *, &zhdr, -1, PHP_HDRHISTOGRAM_DESCRIPTOR_RES_NAME, le_hdrhistogram_descriptor);
+	hdr = hdr_fetch_resource(zhdr, return_value);
 
 	RETURN_LONG(hdr_mean(hdr));
 }
 
 PHP_FUNCTION(hdr_stddev)
 {
-        struct hdr_histogram *hdr;
-        zval *zhdr;
+	struct hdr_histogram *hdr;
+	zval *zhdr;
 
-        if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "r", &zhdr) == FAILURE) {
-                RETURN_FALSE;
-        }
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "r", &zhdr) == FAILURE) {
+		RETURN_FALSE;
+	}
 
-        ZEND_FETCH_RESOURCE(hdr, struct hdr_histogram *, &zhdr, -1, PHP_HDRHISTOGRAM_DESCRIPTOR_RES_NAME, le_hdrhistogram_descriptor);
+	hdr = hdr_fetch_resource(zhdr, return_value);
 
-        RETURN_DOUBLE(hdr_stddev(hdr));
+	RETURN_DOUBLE(hdr_stddev(hdr));
 }
 
 
@@ -176,7 +200,7 @@ PHP_FUNCTION(hdr_min)
 		RETURN_FALSE;
 	}
 
-	ZEND_FETCH_RESOURCE(hdr, struct hdr_histogram *, &zhdr, -1, PHP_HDRHISTOGRAM_DESCRIPTOR_RES_NAME, le_hdrhistogram_descriptor);
+	hdr = hdr_fetch_resource(zhdr, return_value);
 
 	RETURN_LONG(hdr_min(hdr));
 }
@@ -190,7 +214,7 @@ PHP_FUNCTION(hdr_max)
 		RETURN_FALSE;
 	}
 
-	ZEND_FETCH_RESOURCE(hdr, struct hdr_histogram *, &zhdr, -1, PHP_HDRHISTOGRAM_DESCRIPTOR_RES_NAME, le_hdrhistogram_descriptor);
+	hdr = hdr_fetch_resource(zhdr, return_value);
 
 	RETURN_LONG(hdr_max(hdr));
 }
@@ -205,7 +229,7 @@ PHP_FUNCTION(hdr_record_value)
 		RETURN_FALSE;
 	}
 
-	ZEND_FETCH_RESOURCE(hdr, struct hdr_histogram *, &zhdr, -1, PHP_HDRHISTOGRAM_DESCRIPTOR_RES_NAME, le_hdrhistogram_descriptor);
+	hdr = hdr_fetch_resource(zhdr, return_value);
 
 	if (hdr_record_value(hdr, value) == 0) {
 		RETURN_FALSE;
@@ -225,7 +249,7 @@ PHP_FUNCTION(hdr_record_values)
 		RETURN_FALSE;
 	}
 
-	ZEND_FETCH_RESOURCE(hdr, struct hdr_histogram *, &zhdr, -1, PHP_HDRHISTOGRAM_DESCRIPTOR_RES_NAME, le_hdrhistogram_descriptor);
+	hdr = hdr_fetch_resource(zhdr, return_value);
 
 	if (hdr_record_values(hdr, value, count) == 0) {
 		RETURN_FALSE;
@@ -245,7 +269,7 @@ PHP_FUNCTION(hdr_record_corrected_value)
 		RETURN_FALSE;
 	}
 
-	ZEND_FETCH_RESOURCE(hdr, struct hdr_histogram *, &zhdr, -1, PHP_HDRHISTOGRAM_DESCRIPTOR_RES_NAME, le_hdrhistogram_descriptor);
+	hdr = hdr_fetch_resource(zhdr, return_value);
 
 	hdr_record_corrected_value(hdr, value, expected_interval);
 }
@@ -259,7 +283,7 @@ PHP_FUNCTION(hdr_reset)
 		RETURN_FALSE;
 	}
 
-	ZEND_FETCH_RESOURCE(hdr, struct hdr_histogram *, &zhdr, -1, PHP_HDRHISTOGRAM_DESCRIPTOR_RES_NAME, le_hdrhistogram_descriptor);
+	hdr = hdr_fetch_resource(zhdr, return_value);
 
 	hdr_reset(hdr);
 }
@@ -274,7 +298,7 @@ PHP_FUNCTION(hdr_count_at_value)
 		RETURN_FALSE;
 	}
 
-	ZEND_FETCH_RESOURCE(hdr, struct hdr_histogram *, &zhdr, -1, PHP_HDRHISTOGRAM_DESCRIPTOR_RES_NAME, le_hdrhistogram_descriptor);
+	hdr = hdr_fetch_resource(zhdr, return_value);
 
 	RETURN_LONG(hdr_count_at_value(hdr, value));
 }
@@ -289,7 +313,7 @@ PHP_FUNCTION(hdr_value_at_percentile)
 		RETURN_FALSE;
 	}
 
-	ZEND_FETCH_RESOURCE(hdr, struct hdr_histogram *, &zhdr, -1, PHP_HDRHISTOGRAM_DESCRIPTOR_RES_NAME, le_hdrhistogram_descriptor);
+	hdr = hdr_fetch_resource(zhdr, return_value);
 
 	RETURN_LONG(hdr_value_at_percentile(hdr, percentile));
 }
@@ -304,8 +328,8 @@ PHP_FUNCTION(hdr_add)
 		RETURN_FALSE;
 	}
 
-	ZEND_FETCH_RESOURCE(hdra, struct hdr_histogram *, &a, -1, PHP_HDRHISTOGRAM_DESCRIPTOR_RES_NAME, le_hdrhistogram_descriptor);
-	ZEND_FETCH_RESOURCE(hdrb, struct hdr_histogram *, &b, -1, PHP_HDRHISTOGRAM_DESCRIPTOR_RES_NAME, le_hdrhistogram_descriptor);
+	hdra = hdr_fetch_resource(a, return_value);
+	hdrb = hdr_fetch_resource(b, return_value);
 
 	res = hdr_init(hdra->lowest_trackable_value, hdra->highest_trackable_value, hdra->significant_figures, &hdr_new);
 
@@ -332,8 +356,8 @@ PHP_FUNCTION(hdr_merge_into)
 		RETURN_FALSE;
 	}
 
-	ZEND_FETCH_RESOURCE(hdra, struct hdr_histogram *, &a, -1, PHP_HDRHISTOGRAM_DESCRIPTOR_RES_NAME, le_hdrhistogram_descriptor);
-	ZEND_FETCH_RESOURCE(hdrb, struct hdr_histogram *, &b, -1, PHP_HDRHISTOGRAM_DESCRIPTOR_RES_NAME, le_hdrhistogram_descriptor);
+	hdra = hdr_fetch_resource(a, return_value);
+	hdrb = hdr_fetch_resource(b, return_value);
 
 	RETURN_LONG(hdr_add(hdra, hdrb));
 }
@@ -385,7 +409,7 @@ PHP_FUNCTION(hdr_iter_init)
 		RETURN_FALSE;
 	}
 
-	ZEND_FETCH_RESOURCE(hdr, struct hdr_histogram *, &zhdr, -1, PHP_HDRHISTOGRAM_DESCRIPTOR_RES_NAME, le_hdrhistogram_descriptor);
+	hdr = hdr_fetch_resource(zhdr, return_value);
 
 	iterator = malloc(sizeof(struct hdr_iter));
 	hdr_iter_init(iterator, hdr);
@@ -404,7 +428,7 @@ PHP_FUNCTION(hdr_percentile_iter_init)
 		RETURN_FALSE;
 	}
 
-	ZEND_FETCH_RESOURCE(hdr, struct hdr_histogram *, &zhdr, -1, PHP_HDRHISTOGRAM_DESCRIPTOR_RES_NAME, le_hdrhistogram_descriptor);
+	hdr = hdr_fetch_resource(zhdr, return_value);
 
 	iterator = malloc(sizeof(struct hdr_iter));
 	hdr_iter_percentile_init(iterator, hdr, ticks_per_half_distance);
@@ -421,7 +445,7 @@ PHP_FUNCTION(hdr_iter_next)
 		RETURN_FALSE;
 	}
 
-	ZEND_FETCH_RESOURCE(iterator, struct hdr_iter *, &zhdr, -1, "hdr_iterator", le_hdrhistogram_iter_descriptor);
+	iterator = hdr_fetch_iterator(zhdr, return_value);
 
 	if (hdr_iter_next(iterator)) {
 		array_init(return_value);
@@ -443,7 +467,7 @@ PHP_FUNCTION(hdr_percentile_iter_next)
 		RETURN_FALSE;
 	}
 
-	ZEND_FETCH_RESOURCE(iterator, struct hdr_iter *, &zhdr, -1, "hdr_iterator", le_hdrhistogram_iter_descriptor);
+	iterator = hdr_fetch_iterator(zhdr, return_value);
 
 	if (hdr_iter_next(iterator)) {
 		array_init(return_value);
@@ -471,7 +495,7 @@ PHP_FUNCTION(hdr_export)
 		RETURN_FALSE;
 	}
 
-	ZEND_FETCH_RESOURCE(hdr, struct hdr_histogram *, &zhdr, -1, PHP_HDRHISTOGRAM_DESCRIPTOR_RES_NAME, le_hdrhistogram_descriptor);
+	hdr = hdr_fetch_resource(zhdr, return_value);
 
 	array_init(return_value);
 	add_assoc_long(return_value, "ltv", hdr->lowest_trackable_value);
