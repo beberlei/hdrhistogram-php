@@ -79,7 +79,11 @@ zend_module_entry hdrhistogram_module_entry = {
 ZEND_GET_MODULE(hdrhistogram)
 #endif
 
+#if PHP_VERSION_ID >= 70000
+static void php_hdrhistogram_descriptor_dtor(zend_resource *rsrc TSRMLS_DC)
+#else
 static void php_hdrhistogram_descriptor_dtor(zend_rsrc_list_entry *rsrc TSRMLS_DC)
+#endif
 {
 	free(rsrc->ptr);
 }
