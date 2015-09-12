@@ -1,5 +1,7 @@
 # hdrhistogram-php
 
+[![Build Status](https://travis-ci.org/beberlei/hdrhistogram-php.svg?branch=master)](https://travis-ci.org/beberlei/hdrhistogram-php)
+
 A PHP extension wrapping the [HdrHistogram C API](https://github.com/HdrHistogram/HdrHistogram_c).
 
 License: New-BSD 2 Clause
