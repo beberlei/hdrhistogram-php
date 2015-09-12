@@ -16,9 +16,6 @@ env:
     - NO_INTERACTION=1
 
 before_script:
-  - sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
-  - sudo apt-get -qq update
-  - sudo apt-get -qq install g++-4.8
   - "git clone https://github.com/HdrHistogram/HdrHistogram_c && cd HdrHistogram_c && cmake . && make && sudo make install"
   - phpize
   - ./configure 
@@ -27,3 +24,10 @@ before_script:
 script: REPORT_EXIT_STATUS=1 php run-tests.php -p `which php` --show-diff -d extension=`pwd`/.libs/hdrhistogram.so -q
 
 after_failure: "cat tests/*.diff"
+
+addons:
+  apt:
+    sources:
+      - ubuntu-toolchain-r-test
+    packages:
+      - g++-4.8
