@@ -546,7 +546,13 @@ PHP_FUNCTION(hdr_percentile_iter_next)
 
 PHP_FUNCTION(hdr_export)
 {
-	zval *zhdr, *counts;
+	zval *zhdr;
+#if PHP_VERSION_ID >= 70000
+	zval counts_v;
+	zval *counts = &counts_v;
+#else
+	zval *counts;
+#endif
 	int32_t i;
 	struct hdr_histogram *hdr;
 	int found = 0;
@@ -562,7 +568,9 @@ PHP_FUNCTION(hdr_export)
 	add_assoc_long(return_value, "htv", hdr->highest_trackable_value);
 	add_assoc_long(return_value, "sf", hdr->significant_figures);
 
+#if PHP_VERSION_ID < 70000
 	MAKE_STD_ZVAL(counts);
+#endif
 	array_init(counts);
 
 	for (i = 0; i < hdr->counts_len; i++) {
