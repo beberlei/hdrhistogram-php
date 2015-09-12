@@ -1,0 +1,26 @@
+language: php
+
+notifications:
+  email: false
+
+sudo: true
+
+php:
+  - 7.0
+  - 5.6
+  - 5.5
+  - 5.4
+
+env:
+  global:
+    - NO_INTERACTION=1
+
+before_script:
+  - "git clone https://github.com/HdrHistogram/HdrHistogram_c && cd HdrHistogram_c && cmake . && make && sudo make install"
+  - phpize
+  - ./configure 
+  - make
+
+script: REPORT_EXIT_STATUS=1 php run-tests.php -p `which php` --show-diff -d extension=`pwd`/.libs/hdrhistogram.so -q
+
+after_failure: "cat tests/*.diff"
