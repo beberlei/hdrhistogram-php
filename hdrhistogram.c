@@ -12,6 +12,31 @@
 static int le_hdrhistogram_descriptor;
 static int le_hdrhistogram_iter_descriptor;
 
+#if PHP_VERSION_ID >= 70000
+#define strsize_t size_t
+#else
+#define strsize_t uint
+#define zend_ulong ulong
+#endif
+
+static zend_always_inline void hdr_register_hdr_resource(zval *return_value, struct hdr_histogram* hdr)
+{
+#if PHP_VERSION_ID >= 70000
+	ZVAL_RES(return_value, zend_register_resource(hdr, le_hdrhistogram_descriptor));
+#else
+	ZEND_REGISTER_RESOURCE(return_value, hdr, le_hdrhistogram_descriptor);
+#endif
+}
+
+static zend_always_inline void hdr_register_iter_resource(zval *return_value, struct hdr_iter* iter)
+{
+#if PHP_VERSION_ID >= 70000
+	ZVAL_RES(return_value, zend_register_resource(iter, le_hdrhistogram_iter_descriptor));
+#else
+	ZEND_REGISTER_RESOURCE(return_value, iter, le_hdrhistogram_iter_descriptor);
+#endif
+}
+
 static zend_always_inline struct hdr_histogram* hdr_fetch_resource(zval *res, zval *return_value)
 {
 	struct hdr_histogram *hdr;
@@ -33,6 +58,36 @@ static zend_always_inline struct hdr_iter* hdr_fetch_iterator(zval *res, zval *r
 #else
 	ZEND_FETCH_RESOURCE(iterator, struct hdr_iter *, &res, -1, "hdr_iterator", le_hdrhistogram_iter_descriptor);
 	return iterator;
+#endif
+}
+
+static zend_always_inline zval* hdr_hash_find(HashTable *arr, const char* name, strsize_t len)
+{
+#if PHP_VERSION_ID >= 70000
+	return zend_hash_str_find(arr, name, len - 1);
+#else
+	zval **value, *result;
+	if (zend_hash_find(arr, name, len, (void**)&value) == SUCCESS) {
+		result = *value;
+		return result;
+	}
+
+	return NULL;
+#endif
+}
+
+static zend_always_inline zval* hdr_hash_index_find(HashTable *arr, zend_ulong h)
+{
+#if PHP_VERSION_ID >= 70000
+	return zend_hash_index_find(arr, h);
+#else
+	zval **item;
+
+	if (zend_hash_index_find(arr, h, (void**)&item) == SUCCESS) {
+		return *item;
+	}
+
+	return NULL;
 #endif
 }
 
@@ -142,7 +197,7 @@ PHP_FUNCTION(hdr_init)
 	res = hdr_init(lowest_trackable_value, highest_trackable_value, significant_figures, &hdr);
 
 	if (res == 0) {
-		ZEND_REGISTER_RESOURCE(return_value, hdr, le_hdrhistogram_descriptor);
+		hdr_register_hdr_resource(return_value, hdr);
 	} else if (res == EINVAL) {
 		php_error_docref(NULL TSRMLS_CC, E_WARNING, "Lowest trackable value has to be >= 1.");
 
@@ -341,7 +396,7 @@ PHP_FUNCTION(hdr_add)
 	hdr_add(hdr_new, hdrb);
 
 	if (res == 0) {
-		ZEND_REGISTER_RESOURCE(return_value, hdr_new, le_hdrhistogram_descriptor);
+		hdr_register_hdr_resource(return_value, hdr_new);
 	} else if (res == EINVAL) {
 		php_error_docref(NULL TSRMLS_CC, E_WARNING, "Lowest trackable value has to be >= 1.");
 
@@ -418,7 +473,7 @@ PHP_FUNCTION(hdr_iter_init)
 	iterator = malloc(sizeof(struct hdr_iter));
 	hdr_iter_init(iterator, hdr);
 
-	ZEND_REGISTER_RESOURCE(return_value, iterator, le_hdrhistogram_iter_descriptor);
+	hdr_register_iter_resource(return_value, iterator);
 }
 
 PHP_FUNCTION(hdr_percentile_iter_init)
@@ -437,7 +492,7 @@ PHP_FUNCTION(hdr_percentile_iter_init)
 	iterator = malloc(sizeof(struct hdr_iter));
 	hdr_iter_percentile_init(iterator, hdr, ticks_per_half_distance);
 
-	ZEND_REGISTER_RESOURCE(return_value, iterator, le_hdrhistogram_iter_descriptor);
+	hdr_register_iter_resource(return_value, iterator);
 }
 
 PHP_FUNCTION(hdr_iter_next)
@@ -524,48 +579,49 @@ PHP_FUNCTION(hdr_export)
 PHP_FUNCTION(hdr_import)
 {
 	struct hdr_histogram *hdr;
-	zval *import, **value, **item;
+	zval *import, *value, *item;
 	long lowest_trackable_value, highest_trackable_value, significant_figures;
-	int res, i, count;
+	int res, count;
+	zend_ulong i;
 
 	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "a", &import) == FAILURE) {
 		RETURN_FALSE;
 	}
 
-	if (zend_hash_find(Z_ARRVAL_P(import), "ltv", 4, (void**)&value) == FAILURE) {
+	if (value = hdr_hash_find(Z_ARRVAL_P(import), "ltv", 4)) {
 		php_error_docref(NULL TSRMLS_CC, E_WARNING, "Missing lowest_trackable_value (ltv) key.");
 		RETURN_FALSE;
 	}
-	lowest_trackable_value = Z_LVAL_PP(value);
+	lowest_trackable_value = Z_LVAL_P(value);
 
-	if (zend_hash_find(Z_ARRVAL_P(import), "htv", 4, (void**)&value) == FAILURE) {
+	if (value = hdr_hash_find(Z_ARRVAL_P(import), "htv", 4)) {
 		php_error_docref(NULL TSRMLS_CC, E_WARNING, "Missing highest_trackable_value (htv) key.");
 		RETURN_FALSE;
 	}
-	highest_trackable_value = Z_LVAL_PP(value);
+	highest_trackable_value = Z_LVAL_P(value);
 
-	if (zend_hash_find(Z_ARRVAL_P(import), "sf", 3, (void**)&value) == FAILURE) {
+	if (value = hdr_hash_find(Z_ARRVAL_P(import), "sf", 3)) {
 		php_error_docref(NULL TSRMLS_CC, E_WARNING, "Missing significant_figures (sf) key.");
 		RETURN_FALSE;
 	}
-	significant_figures = Z_LVAL_PP(value);
+	significant_figures = Z_LVAL_P(value);
 
-	if (zend_hash_find(Z_ARRVAL_P(import), "c", 2, (void**)&value) == FAILURE) {
+	if (value = hdr_hash_find(Z_ARRVAL_P(import), "c", 2)) {
 		php_error_docref(NULL TSRMLS_CC, E_WARNING, "Missing counts (c) key.");
 		RETURN_FALSE;
 	}
 
-	if (Z_TYPE_PP(value) != IS_ARRAY) {
+	if (Z_TYPE_P(value) != IS_ARRAY) {
 		php_error_docref(NULL TSRMLS_CC, E_WARNING, "Count is required to be an array.");
 		RETURN_FALSE;
 	}
 
-	count = zend_hash_num_elements(Z_ARRVAL_PP(value));
+	count = zend_hash_num_elements(Z_ARRVAL_P(value));
 
 	res = hdr_init(lowest_trackable_value, highest_trackable_value, significant_figures, &hdr);
 
 	if (res == 0) {
-		ZEND_REGISTER_RESOURCE(return_value, hdr, le_hdrhistogram_descriptor);
+		hdr_register_hdr_resource(return_value, hdr);
 	} else if (res == EINVAL) {
 		php_error_docref(NULL TSRMLS_CC, E_WARNING, "Lowest trackable value has to be >= 1.");
 
@@ -575,10 +631,14 @@ PHP_FUNCTION(hdr_import)
 	}
 
 	for (i = 0; i < count; i++) {
-		if (zend_hash_index_find(Z_ARRVAL_PP(value), i, (void**)&item) == SUCCESS) {
+		if (item = hdr_hash_index_find(Z_ARRVAL_P(value), i)) {
 			if (i < hdr->counts_len) {
+#if PHP_VERSION_ID >= 70000
 				convert_to_long_ex(item);
-			  	hdr->counts[i] = Z_LVAL_PP(item);
+#else
+				convert_to_long_ex(&item);
+#endif
+			  	hdr->counts[i] = Z_LVAL_P(item);
 			}
 		}
 	}
