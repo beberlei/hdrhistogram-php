@@ -61,12 +61,13 @@ static zend_always_inline struct hdr_iter* hdr_fetch_iterator(zval *res, zval *r
 #endif
 }
 
-static zend_always_inline zval* hdr_hash_find(HashTable *arr, const char* name, strsize_t len)
+static zend_always_inline zval* hdr_hash_find(HashTable *arr, const char *name, strsize_t len)
 {
 #if PHP_VERSION_ID >= 70000
 	return zend_hash_str_find(arr, name, len - 1);
 #else
 	zval **value, *result;
+
 	if (zend_hash_find(arr, name, len, (void**)&value) == SUCCESS) {
 		result = *value;
 		return result;
@@ -589,24 +590,29 @@ PHP_FUNCTION(hdr_import)
 	}
 
 	if (value = hdr_hash_find(Z_ARRVAL_P(import), "ltv", 4)) {
+		lowest_trackable_value = Z_LVAL_P(value);
+	} else {
 		php_error_docref(NULL TSRMLS_CC, E_WARNING, "Missing lowest_trackable_value (ltv) key.");
 		RETURN_FALSE;
 	}
-	lowest_trackable_value = Z_LVAL_P(value);
 
 	if (value = hdr_hash_find(Z_ARRVAL_P(import), "htv", 4)) {
+		highest_trackable_value = Z_LVAL_P(value);
+	} else {
 		php_error_docref(NULL TSRMLS_CC, E_WARNING, "Missing highest_trackable_value (htv) key.");
 		RETURN_FALSE;
 	}
-	highest_trackable_value = Z_LVAL_P(value);
 
 	if (value = hdr_hash_find(Z_ARRVAL_P(import), "sf", 3)) {
+		significant_figures = Z_LVAL_P(value);
+	} else {
 		php_error_docref(NULL TSRMLS_CC, E_WARNING, "Missing significant_figures (sf) key.");
 		RETURN_FALSE;
 	}
-	significant_figures = Z_LVAL_P(value);
 
-	if (value = hdr_hash_find(Z_ARRVAL_P(import), "c", 2)) {
+	value = hdr_hash_find(Z_ARRVAL_P(import), "c", 2);
+
+	if (value == NULL) {
 		php_error_docref(NULL TSRMLS_CC, E_WARNING, "Missing counts (c) key.");
 		RETURN_FALSE;
 	}
