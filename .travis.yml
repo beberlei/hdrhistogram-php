@@ -18,7 +18,7 @@ env:
 before_script:
   - sudo ln -s /usr/bin/gcc-4.8 /usr/local/bin/gcc
   - gcc --version
-  - "git clone https://github.com/HdrHistogram/HdrHistogram_c && cd HdrHistogram_c && cmake . && make && sudo make install"
+  - "git clone https://github.com/HdrHistogram/HdrHistogram_c && pushd HdrHistogram_c && cmake . && make && sudo make install && popd"
   - phpize
   - ./configure 
   - make
