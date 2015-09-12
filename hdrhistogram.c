@@ -422,43 +422,6 @@ PHP_FUNCTION(hdr_merge_into)
 	RETURN_LONG(hdr_add(hdra, hdrb));
 }
 
-/*PHP_FUNCTION(hdr_log_encode)
-{
-	struct hdr_histogram *hdr;
-	zval *zhdr;
-	char *data;
-
-	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "r", &zhdr) == FAILURE) {
-		RETURN_FALSE;
-	}
-
-	ZEND_FETCH_RESOURCE(hdr, struct hdr_histogram *, &zhdr, -1, PHP_HDRHISTOGRAM_DESCRIPTOR_RES_NAME, le_hdrhistogram_descriptor);
-
-	hdr_log_encode(hdr, &data);
-
-	RETURN_STRING(data, 1);
-}*/
-
-/*PHP_FUNCTION(hdr_log_decode)
-{
-	struct hdr_histogram *hdr;
-	char *data;
-	int len, result;
-
-	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &data, &len) == FAILURE) {
-		RETURN_FALSE;
-	}
-
-	result = hdr_log_decode(&hdr, data, len);
-
-	if (result == 0) {
-		ZEND_REGISTER_RESOURCE(return_value, hdr, le_hdrhistogram_descriptor);
-	} else {
-		php_error_docref(NULL TSRMLS_CC, E_WARNING, "Could not decode binary hdrhistogram.");
-		RETURN_FALSE;
-	}
-}*/
-
 PHP_FUNCTION(hdr_iter_init)
 {
 	struct hdr_iter *iterator;
