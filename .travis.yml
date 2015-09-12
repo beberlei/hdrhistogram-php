@@ -16,6 +16,7 @@ env:
     - NO_INTERACTION=1
 
 before_script:
+  - sudo ln -s /usr/local/bin/gcc /usr/bin/gcc-4.8
   - gcc --version
   - "git clone https://github.com/HdrHistogram/HdrHistogram_c && cd HdrHistogram_c && cmake . && make && sudo make install"
   - phpize
