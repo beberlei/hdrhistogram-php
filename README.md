@@ -12,7 +12,7 @@ A Histogram that supports recording and analyzing sampled data value counts acro
 
 [Website/Documentation](http://hdrhistogram.org)
 
-## API
+## Example
 
 The API is very similar to the C code:
 
@@ -46,11 +46,16 @@ while ($data = hdr_iter_next($iter)) {
 
 ```
 
+## API
+
+``hdr_init(int $lowestTrackableValue, int $highestTrackableValue, int $significantValues): resource``
+
+Create a new histogram resource within the given bounds of trackable values and the precision
+defined by significant values.
+
 ## TODO
 
 * Missing Iterators
     * LinearIterator
     * LogIterator
     * RecordedIterator
-* Serialization/Unserialization
-
