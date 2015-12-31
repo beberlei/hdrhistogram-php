@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<package xmlns="http://pear.php.net/dtd/package-2.0" xmlns:tasks="http://pear.php.net/dtd/tasks-1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" packagerversion="1.4.7" version="2.0" xsi:schemaLocation="http://pear.php.net/dtd/tasks-1.0 http://pear.php.net/dtd/tasks-1.0.xsd http://pear.php.net/dtd/package-2.0 http://pear.php.net/dtd/package-2.0.xsd"> 
+ <name>hdr_histogram</name>
+ <channel>pecl.php.net</channel>
+ <summary>A PHP extension wrapper for the C hdrhistogram API</summary>
+ <description>HdrHistogram: A High Dynamic Range Histogram. A Histogram that supports recording and analyzing sampled data value counts across a configurable integer value range with configurable value precision within the range. Value precision is expressed as the number of significant digits in the value recording, and provides control over value quantization behavior across the value range and the subsequent value resolution at any given level.</description>
+ <lead>
+  <name>Benjamin Eberlei</name>
+  <user>beberlei</user>
+  <email>beberlei@php.net</email>
+  <active>yes</active>
+ </lead>
+ <date>2015-12-31</date>
+ <time>17:00:00</time>
+ <version>
+  <release>0.1.0</release>
+  <api>0.1.0</api>
+ </version>
+ <stability>
+  <release>beta</release>
+  <api>beta</api>
+ </stability>
+ <license uri="https://opensource.org/licenses/BSD-2-Clause">New BSD</license>
+ <notes>
+     - First release
+ </notes>
+ <contents> 
+  <dir name="/"> 
+   <file name="config.m4"    role="src" />
+   <file name="php_hdrhistogram.h" role="src" />
+   <file name="hdrhistogram.c" role="src" />
+   <file name="README.md" role="doc" />
+   <file name="LICENSE" role="doc" />
+   <dir name="tests">
+    <file name="hdrhistogram_001.phpt" role="test" />
+    <file name="hdrhistogram_002.phpt" role="test" />
+    <file name="hdrhistogram_003.phpt" role="test" />
+    <file name="hdrhistogram_004.phpt" role="test" />
+    <file name="hdrhistogram_005.phpt" role="test" />
+    <file name="hdrhistogram_006.phpt" role="test" />
+    <file name="hdrhistogram_007.phpt" role="test" />
+    <file name="hdrhistogram_008.phpt" role="test" />
+    <file name="hdrhistogram_010.phpt" role="test" />
+   </dir>
+  </dir> 
+ </contents> 
+ <dependencies> 
+  <required> 
+   <php> 
+    <min>5.4.0</min> 
+   </php> 
+   <pearinstaller> 
+    <min>1.4.0</min> 
+   </pearinstaller> 
+  </required> 
+ </dependencies> 
+ <providesextension>hdrhistogram</providesextension>
+ <extsrcrelease />
+ <changelog> 
+  <release> 
+   <date>2015-12-31</date> 
+   <version> 
+    <release>0.1.0</release> 
+    <api>0.1.0</api> 
+   </version> 
+   <stability> 
+    <release>beta</release> 
+    <api>beta</api> 
+   </stability> 
+   <license uri="https://opensource.org/licenses/BSD-2-Clause">New BSD</license>
+   <notes>
+    - Initial release
+   </notes> 
+  </release> 
+ </changelog> 
+</package> 
+<!--
+vim:et:ts=1:sw=1
+--> 
+

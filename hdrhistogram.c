@@ -127,7 +127,7 @@ zend_module_entry hdrhistogram_module_entry = {
 	PHP_RINIT(hdrhistogram),               /* Request init callback */
 	PHP_RSHUTDOWN(hdrhistogram),           /* Request shutdown callback */
 	PHP_MINFO(hdrhistogram),               /* Module info callback */
-	"0.1",
+	HDR_VERSION,
 	STANDARD_MODULE_PROPERTIES
 };
 
