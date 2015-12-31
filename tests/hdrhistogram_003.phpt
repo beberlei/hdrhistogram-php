@@ -1,6 +1,5 @@
 --TEST--
 hdrhistogram: Corrected Values
-Author: kontakt@beberlei.de
 --FILE--
 <?php
 

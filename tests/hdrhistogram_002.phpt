@@ -1,6 +1,5 @@
 --TEST--
 hdrhistogram: Reset Histogram
-Author: kontakt@beberlei.de
 --FILE--
 <?php
 

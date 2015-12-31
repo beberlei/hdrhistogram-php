@@ -1,6 +1,5 @@
 --TEST--
 hdrhistogram: Merge Into
-Author: kontakt@beberlei.de
 --FILE--
 <?php
 

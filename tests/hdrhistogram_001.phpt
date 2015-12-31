@@ -1,6 +1,5 @@
 --TEST--
 hdrhistogram: Basic Functionality
-Author: kontakt@beberlei.de
 --FILE--
 <?php
 

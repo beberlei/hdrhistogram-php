@@ -1,6 +1,5 @@
 --TEST--
 hdrhistogram: Basic Iterator
-Author: kontakt@beberlei.de
 --FILE--
 <?php
 

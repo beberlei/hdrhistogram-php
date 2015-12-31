@@ -1,6 +1,5 @@
 --TEST--
 hdrhistogram: Value At Percentile
-Author: kontakt@beberlei.de
 --FILE--
 <?php
 
