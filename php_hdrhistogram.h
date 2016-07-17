@@ -19,6 +19,7 @@ PHP_FUNCTION(hdr_mean);
 PHP_FUNCTION(hdr_stddev);
 PHP_FUNCTION(hdr_min);
 PHP_FUNCTION(hdr_max);
+PHP_FUNCTION(hdr_total_count);
 PHP_FUNCTION(hdr_record_value);
 PHP_FUNCTION(hdr_record_values);
 PHP_FUNCTION(hdr_record_corrected_value);

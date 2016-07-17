@@ -102,6 +102,7 @@ zend_function_entry hdrhistogram_functions[] = {
     PHP_FE(hdr_stddev, NULL)
     PHP_FE(hdr_min, NULL)
     PHP_FE(hdr_max, NULL)
+    PHP_FE(hdr_total_count, NULL)
     PHP_FE(hdr_reset, NULL)
     PHP_FE(hdr_count_at_value, NULL)
     PHP_FE(hdr_value_at_percentile, NULL)
@@ -277,6 +278,20 @@ PHP_FUNCTION(hdr_max)
     hdr = hdr_fetch_resource(zhdr, return_value TSRMLS_CC);
 
     RETURN_LONG(hdr_max(hdr));
+}
+
+PHP_FUNCTION(hdr_total_count)
+{
+    struct hdr_histogram *hdr;
+    zval *zhdr;
+
+    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "r", &zhdr) == FAILURE) {
+        RETURN_FALSE;
+    }
+
+    hdr = hdr_fetch_resource(zhdr, return_value TSRMLS_CC);
+
+    RETURN_LONG(hdr->total_count);
 }
 
 PHP_FUNCTION(hdr_record_value)
