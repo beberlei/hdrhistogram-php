@@ -1,6 +1,5 @@
 --TEST--
 hdrhistogram: Percentile Iterator
-Author: kontakt@beberlei.de
 --FILE--
 <?php
 

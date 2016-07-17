@@ -37,6 +37,6 @@ PHP_FUNCTION(hdr_percentile_iter_next);
 PHP_FUNCTION(hdr_export);
 PHP_FUNCTION(hdr_import);
 
-//PHP_FUNCTION(hdr_log_encode);
-//PHP_FUNCTION(hdr_log_decode);
+PHP_FUNCTION(hdr_base64_encode);
+PHP_FUNCTION(hdr_base64_decode);
 #endif

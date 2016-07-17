@@ -107,14 +107,14 @@ zend_function_entry hdrhistogram_functions[] = {
 	PHP_FE(hdr_value_at_percentile, NULL)
 	PHP_FE(hdr_add, NULL)
 	PHP_FE(hdr_merge_into, NULL)
-	//PHP_FE(hdr_log_encode, NULL)
-	//PHP_FE(hdr_log_decode, NULL)
 	PHP_FE(hdr_iter_init, NULL)
 	PHP_FE(hdr_iter_next, NULL)
 	PHP_FE(hdr_percentile_iter_init, NULL)
 	PHP_FE(hdr_percentile_iter_next, NULL)
 	PHP_FE(hdr_export, NULL)
 	PHP_FE(hdr_import, NULL)
+    PHP_FE(hdr_base64_encode, NULL)
+    PHP_FE(hdr_base64_decode, NULL)
 	{ NULL, NULL, NULL }
 };
 
@@ -623,4 +623,48 @@ PHP_FUNCTION(hdr_import)
 	hdr_reset_internal_counters(hdr);
 	hdr->normalizing_index_offset = 0;
 	hdr->conversion_ratio = 1.0;
+}
+
+PHP_FUNCTION(hdr_base64_encode)
+{
+    struct hdr_histogram *hdr;
+    zval *zhdr;
+    char *result = NULL;
+
+    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "r", &zhdr) == FAILURE) {
+        RETURN_FALSE;
+    }
+
+    hdr = hdr_fetch_resource(zhdr, return_value TSRMLS_CC);
+
+    if (hdr_log_encode(hdr, &result) != 0) {
+        php_error_docref(NULL TSRMLS_CC, E_WARNING, "Cannot encode histogram");
+
+        RETURN_FALSE;
+    }
+
+#if PHP_VERSION_ID >= 70000
+    RETURN_STRING(result);
+#else
+    RETURN_STRING(result, 1);
+#endif
+}
+
+PHP_FUNCTION(hdr_base64_decode)
+{
+    struct hdr_histogram *hdr = NULL;
+    char *data = NULL;
+    strsize_t data_len;
+
+    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &data, &data_len) == FAILURE) {
+        RETURN_FALSE;
+    }
+
+    if (hdr_log_decode(&hdr, data, data_len) != 0) {
+        php_error_docref(NULL TSRMLS_CC, E_WARNING, "Cannot decode histogram");
+
+        RETURN_FALSE;
+    }
+
+    hdr_register_hdr_resource(return_value, hdr TSRMLS_CC);
 }
