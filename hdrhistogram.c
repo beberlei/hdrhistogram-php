@@ -533,7 +533,7 @@ PHP_FUNCTION(hdr_export)
 #endif
     int32_t i;
     struct hdr_histogram *hdr;
-    int found = 0;
+    int found = 0, skipped = 0;
 
     if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "r", &zhdr) == FAILURE) {
         RETURN_FALSE;
@@ -555,12 +555,19 @@ PHP_FUNCTION(hdr_export)
         if (found >= hdr->total_count) {
             break;
         }
+        if (found == 0 && hdr->counts[i] == 0) {
+            skipped++;
+            continue;
+        }
 
-        add_index_double(counts, i, hdr->counts[i]);
+        add_next_index_double(counts, hdr->counts[i]);
         found += hdr->counts[i];
     }
 
     add_assoc_zval(return_value, "c", counts);
+    if (skipped > 0) {
+        add_assoc_long(return_value, "sk", skipped);
+    }
 }
 
 PHP_FUNCTION(hdr_import)
@@ -569,7 +576,7 @@ PHP_FUNCTION(hdr_import)
     zval *import, *value, *item;
     long lowest_trackable_value, highest_trackable_value, significant_figures;
     int res, count;
-    zend_ulong i;
+    zend_ulong i, bucket, skipped;
 
     if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "a", &import) == FAILURE) {
         RETURN_FALSE;
@@ -594,6 +601,12 @@ PHP_FUNCTION(hdr_import)
     } else {
         php_error_docref(NULL TSRMLS_CC, E_WARNING, "Missing significant_figures (sf) key.");
         RETURN_FALSE;
+    }
+
+    if (value = hdr_hash_find(Z_ARRVAL_P(import), "sk", 3)) {
+        skipped = Z_LVAL_P(value);
+    } else {
+        skipped = 0;
     }
 
     value = hdr_hash_find(Z_ARRVAL_P(import), "c", 2);
@@ -622,15 +635,22 @@ PHP_FUNCTION(hdr_import)
         perror("Memory error in hdr_init allocation.");
     }
 
+    for (i = 0; i < skipped; i++) {
+        if (i < hdr->counts_len) {
+            hdr->counts[i] = 0;
+        }
+    }
+
     for (i = 0; i < count; i++) {
         if (item = hdr_hash_index_find(Z_ARRVAL_P(value), i)) {
-            if (i < hdr->counts_len) {
+            bucket = i + skipped;
+            if (bucket < hdr->counts_len) {
 #if PHP_VERSION_ID >= 70000
                 convert_to_long_ex(item);
 #else
                 convert_to_long_ex(&item);
 #endif
-                hdr->counts[i] = Z_LVAL_P(item);
+                hdr->counts[bucket] = Z_LVAL_P(item);
             }
         }
     }

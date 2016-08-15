@@ -24,6 +24,13 @@ if (hdr_mean($imported) === hdr_mean($hdr)) {
     echo "FAILURE\n";
 }
 
+$iter = hdr_iter_init($imported);
+while ($data = hdr_iter_next($iter)) {
+    if ($data['count_at_index']) {
+        echo $data['value'] . ': ' . $data['count_at_index'] . "\n";
+    }
+}
+
 --EXPECTF--
 array(4) {
   ["ltv"]=>
@@ -36,7 +43,7 @@ array(4) {
   array(0) {
   }
 }
-array(4) {
+array(5) {
   ["ltv"]=>
   int(1)
   ["htv"]=>
@@ -44,15 +51,15 @@ array(4) {
   ["sf"]=>
   int(2)
   ["c"]=>
-  array(11) {
+  array(10) {
     [0]=>
-    float(0)
-    [1]=>
     float(10)
-    [2]=>
+    [1]=>
     float(20)
-    [3]=>
+    [2]=>
     float(25)
+    [3]=>
+    float(0)
     [4]=>
     float(0)
     [5]=>
@@ -64,9 +71,13 @@ array(4) {
     [8]=>
     float(0)
     [9]=>
-    float(0)
-    [10]=>
     float(10)
   }
+  ["sk"]=>
+  int(1)
 }
 SUCCESS
+1: 10
+2: 20
+3: 25
+10: 10
