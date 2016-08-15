@@ -20,7 +20,7 @@ before_script:
   - gcc --version
   - "git clone https://github.com/HdrHistogram/HdrHistogram_c && pushd HdrHistogram_c && cmake . && make && sudo make install && popd"
   - phpize
-  - ./configure 
+  - ./configure --with-hdrhistogram=/usr/local
   - make
 
 script: REPORT_EXIT_STATUS=1 php run-tests.php -p `which php` --show-diff -d extension=`pwd`/.libs/hdrhistogram.so -q
