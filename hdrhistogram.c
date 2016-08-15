@@ -609,6 +609,11 @@ PHP_FUNCTION(hdr_import)
         skipped = 0;
     }
 
+    if (skipped < 0 || lowest_trackable_value < 1 || highest_trackable_value < lowest_trackable_value || significant_figures < 1) {
+        php_error_docref(NULL TSRMLS_CC, E_WARNING, "Invalid values for ltv, htv, sf or sk keys given.");
+        RETURN_FALSE;
+    }
+
     value = hdr_hash_find(Z_ARRVAL_P(import), "c", 2);
 
     if (value == NULL) {
