@@ -39,24 +39,24 @@ static zend_always_inline void hdr_register_iter_resource(zval *return_value, st
 
 static zend_always_inline struct hdr_histogram* hdr_fetch_resource(zval *res, zval *return_value TSRMLS_DC)
 {
-    struct hdr_histogram *hdr;
-
 #if PHP_VERSION_ID >= 70000
     return (struct hdr_histogram*)zend_fetch_resource(Z_RES_P(res), PHP_HDRHISTOGRAM_DESCRIPTOR_RES_NAME, le_hdrhistogram_descriptor);
 #else
-    ZEND_FETCH_RESOURCE(hdr, struct hdr_histogram *, &res, -1, PHP_HDRHISTOGRAM_DESCRIPTOR_RES_NAME, le_hdrhistogram_descriptor);
+    struct hdr_histogram *hdr;
+
+    ZEND_FETCH_RESOURCE_NO_RETURN(hdr, struct hdr_histogram *, &res, -1, PHP_HDRHISTOGRAM_DESCRIPTOR_RES_NAME, le_hdrhistogram_descriptor);
     return hdr;
 #endif
 }
 
 static zend_always_inline struct hdr_iter* hdr_fetch_iterator(zval *res, zval *return_value TSRMLS_DC)
 {
-    struct hdr_iter *iterator;
-
 #if PHP_VERSION_ID >= 70000
     return (struct hdr_iter*)zend_fetch_resource(Z_RES_P(res), "hdr_iterator", le_hdrhistogram_iter_descriptor);
 #else
-    ZEND_FETCH_RESOURCE(iterator, struct hdr_iter *, &res, -1, "hdr_iterator", le_hdrhistogram_iter_descriptor);
+    struct hdr_iter *iterator;
+
+    ZEND_FETCH_RESOURCE_NO_RETURN(iterator, struct hdr_iter *, &res, -1, "hdr_iterator", le_hdrhistogram_iter_descriptor);
     return iterator;
 #endif
 }
@@ -582,28 +582,28 @@ PHP_FUNCTION(hdr_import)
         RETURN_FALSE;
     }
 
-    if (value = hdr_hash_find(Z_ARRVAL_P(import), "ltv", 4)) {
+    if ((value = hdr_hash_find(Z_ARRVAL_P(import), "ltv", 4))) {
         lowest_trackable_value = Z_LVAL_P(value);
     } else {
         php_error_docref(NULL TSRMLS_CC, E_WARNING, "Missing lowest_trackable_value (ltv) key.");
         RETURN_FALSE;
     }
 
-    if (value = hdr_hash_find(Z_ARRVAL_P(import), "htv", 4)) {
+    if ((value = hdr_hash_find(Z_ARRVAL_P(import), "htv", 4))) {
         highest_trackable_value = Z_LVAL_P(value);
     } else {
         php_error_docref(NULL TSRMLS_CC, E_WARNING, "Missing highest_trackable_value (htv) key.");
         RETURN_FALSE;
     }
 
-    if (value = hdr_hash_find(Z_ARRVAL_P(import), "sf", 3)) {
+    if ((value = hdr_hash_find(Z_ARRVAL_P(import), "sf", 3))) {
         significant_figures = Z_LVAL_P(value);
     } else {
         php_error_docref(NULL TSRMLS_CC, E_WARNING, "Missing significant_figures (sf) key.");
         RETURN_FALSE;
     }
 
-    if (value = hdr_hash_find(Z_ARRVAL_P(import), "sk", 3)) {
+    if ((value = hdr_hash_find(Z_ARRVAL_P(import), "sk", 3))) {
         skipped = Z_LVAL_P(value);
     } else {
         skipped = 0;
@@ -647,7 +647,7 @@ PHP_FUNCTION(hdr_import)
     }
 
     for (i = 0; i < count; i++) {
-        if (item = hdr_hash_index_find(Z_ARRVAL_P(value), i)) {
+        if ((item = hdr_hash_index_find(Z_ARRVAL_P(value), i))) {
             bucket = i + skipped;
             if (bucket < hdr->counts_len) {
 #if PHP_VERSION_ID >= 70000
