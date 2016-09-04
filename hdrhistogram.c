@@ -582,28 +582,28 @@ PHP_FUNCTION(hdr_import)
         RETURN_FALSE;
     }
 
-    if (value = hdr_hash_find(Z_ARRVAL_P(import), "ltv", 4)) {
+    if ((value = hdr_hash_find(Z_ARRVAL_P(import), "ltv", 4))) {
         lowest_trackable_value = Z_LVAL_P(value);
     } else {
         php_error_docref(NULL TSRMLS_CC, E_WARNING, "Missing lowest_trackable_value (ltv) key.");
         RETURN_FALSE;
     }
 
-    if (value = hdr_hash_find(Z_ARRVAL_P(import), "htv", 4)) {
+    if ((value = hdr_hash_find(Z_ARRVAL_P(import), "htv", 4))) {
         highest_trackable_value = Z_LVAL_P(value);
     } else {
         php_error_docref(NULL TSRMLS_CC, E_WARNING, "Missing highest_trackable_value (htv) key.");
         RETURN_FALSE;
     }
 
-    if (value = hdr_hash_find(Z_ARRVAL_P(import), "sf", 3)) {
+    if ((value = hdr_hash_find(Z_ARRVAL_P(import), "sf", 3))) {
         significant_figures = Z_LVAL_P(value);
     } else {
         php_error_docref(NULL TSRMLS_CC, E_WARNING, "Missing significant_figures (sf) key.");
         RETURN_FALSE;
     }
 
-    if (value = hdr_hash_find(Z_ARRVAL_P(import), "sk", 3)) {
+    if ((value = hdr_hash_find(Z_ARRVAL_P(import), "sk", 3))) {
         skipped = Z_LVAL_P(value);
     } else {
         skipped = 0;
@@ -647,7 +647,7 @@ PHP_FUNCTION(hdr_import)
     }
 
     for (i = 0; i < count; i++) {
-        if (item = hdr_hash_index_find(Z_ARRVAL_P(value), i)) {
+        if ((item = hdr_hash_index_find(Z_ARRVAL_P(value), i))) {
             bucket = i + skipped;
             if (bucket < hdr->counts_len) {
 #if PHP_VERSION_ID >= 70000
