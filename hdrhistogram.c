@@ -44,7 +44,7 @@ static zend_always_inline struct hdr_histogram* hdr_fetch_resource(zval *res, zv
 #else
     struct hdr_histogram *hdr;
 
-    ZEND_FETCH_RESOURCE(hdr, struct hdr_histogram *, &res, -1, PHP_HDRHISTOGRAM_DESCRIPTOR_RES_NAME, le_hdrhistogram_descriptor);
+    ZEND_FETCH_RESOURCE_NO_RETURN(hdr, struct hdr_histogram *, &res, -1, PHP_HDRHISTOGRAM_DESCRIPTOR_RES_NAME, le_hdrhistogram_descriptor);
     return hdr;
 #endif
 }
@@ -56,7 +56,7 @@ static zend_always_inline struct hdr_iter* hdr_fetch_iterator(zval *res, zval *r
 #else
     struct hdr_iter *iterator;
 
-    ZEND_FETCH_RESOURCE(iterator, struct hdr_iter *, &res, -1, "hdr_iterator", le_hdrhistogram_iter_descriptor);
+    ZEND_FETCH_RESOURCE_NO_RETURN(iterator, struct hdr_iter *, &res, -1, "hdr_iterator", le_hdrhistogram_iter_descriptor);
     return iterator;
 #endif
 }
