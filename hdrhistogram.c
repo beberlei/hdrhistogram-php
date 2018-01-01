@@ -12,84 +12,40 @@
 static int le_hdrhistogram_descriptor;
 static int le_hdrhistogram_iter_descriptor;
 
-#if PHP_VERSION_ID >= 70000
 #define strsize_t size_t
-#else
-#define strsize_t uint
-#define zend_ulong ulong
-#endif
 
 static zend_always_inline void hdr_register_hdr_resource(zval *return_value, struct hdr_histogram* hdr TSRMLS_DC)
 {
-#if PHP_VERSION_ID >= 70000
     ZVAL_RES(return_value, zend_register_resource(hdr, le_hdrhistogram_descriptor));
-#else
-    ZEND_REGISTER_RESOURCE(return_value, hdr, le_hdrhistogram_descriptor);
-#endif
 }
 
 static zend_always_inline void hdr_register_iter_resource(zval *return_value, struct hdr_iter* iter TSRMLS_DC)
 {
-#if PHP_VERSION_ID >= 70000
     ZVAL_RES(return_value, zend_register_resource(iter, le_hdrhistogram_iter_descriptor));
-#else
-    ZEND_REGISTER_RESOURCE(return_value, iter, le_hdrhistogram_iter_descriptor);
-#endif
 }
 
 static zend_always_inline struct hdr_histogram* hdr_fetch_resource(zval *res, zval *return_value TSRMLS_DC)
 {
     struct hdr_histogram *hdr;
 
-#if PHP_VERSION_ID >= 70000
     return (struct hdr_histogram*)zend_fetch_resource(Z_RES_P(res), PHP_HDRHISTOGRAM_DESCRIPTOR_RES_NAME, le_hdrhistogram_descriptor);
-#else
-    ZEND_FETCH_RESOURCE(hdr, struct hdr_histogram *, &res, -1, PHP_HDRHISTOGRAM_DESCRIPTOR_RES_NAME, le_hdrhistogram_descriptor);
-    return hdr;
-#endif
 }
 
 static zend_always_inline struct hdr_iter* hdr_fetch_iterator(zval *res, zval *return_value TSRMLS_DC)
 {
     struct hdr_iter *iterator;
 
-#if PHP_VERSION_ID >= 70000
     return (struct hdr_iter*)zend_fetch_resource(Z_RES_P(res), "hdr_iterator", le_hdrhistogram_iter_descriptor);
-#else
-    ZEND_FETCH_RESOURCE(iterator, struct hdr_iter *, &res, -1, "hdr_iterator", le_hdrhistogram_iter_descriptor);
-    return iterator;
-#endif
 }
 
 static zend_always_inline zval* hdr_hash_find(HashTable *arr, const char *name, strsize_t len)
 {
-#if PHP_VERSION_ID >= 70000
     return zend_hash_str_find(arr, name, len - 1);
-#else
-    zval **value, *result;
-
-    if (zend_hash_find(arr, name, len, (void**)&value) == SUCCESS) {
-        result = *value;
-        return result;
-    }
-
-    return NULL;
-#endif
 }
 
 static zend_always_inline zval* hdr_hash_index_find(HashTable *arr, zend_ulong h)
 {
-#if PHP_VERSION_ID >= 70000
     return zend_hash_index_find(arr, h);
-#else
-    zval **item;
-
-    if (zend_hash_index_find(arr, h, (void**)&item) == SUCCESS) {
-        return *item;
-    }
-
-    return NULL;
-#endif
 }
 
 zend_function_entry hdrhistogram_functions[] = {
@@ -136,11 +92,7 @@ zend_module_entry hdrhistogram_module_entry = {
 ZEND_GET_MODULE(hdrhistogram)
 #endif
 
-#if PHP_VERSION_ID >= 70000
 static void php_hdrhistogram_descriptor_dtor(zend_resource *rsrc TSRMLS_DC)
-#else
-static void php_hdrhistogram_descriptor_dtor(zend_rsrc_list_entry *rsrc TSRMLS_DC)
-#endif
 {
     free(rsrc->ptr);
 }
@@ -525,12 +477,8 @@ PHP_FUNCTION(hdr_percentile_iter_next)
 PHP_FUNCTION(hdr_export)
 {
     zval *zhdr;
-#if PHP_VERSION_ID >= 70000
     zval buckets_v;
     zval *buckets = &buckets_v;
-#else
-    zval *buckets;
-#endif
     int32_t i;
     struct hdr_histogram *hdr;
     int found = 0;
@@ -553,9 +501,6 @@ PHP_FUNCTION(hdr_export)
         add_assoc_long(return_value, "sf", hdr->significant_figures);
     }
 
-#if PHP_VERSION_ID < 70000
-    MAKE_STD_ZVAL(buckets);
-#endif
     array_init(buckets);
 
     for (i = 0; i < hdr->counts_len; i++) {
@@ -662,11 +607,7 @@ PHP_FUNCTION(hdr_import)
             if (item = hdr_hash_index_find(Z_ARRVAL_P(value), i)) {
                 bucket = i + skipped;
                 if (bucket < hdr->counts_len) {
-#if PHP_VERSION_ID >= 70000
                     convert_to_long_ex(item);
-#else
-                    convert_to_long_ex(&item);
-#endif
                     if (Z_LVAL_P(item) > 0) {
                         hdr->counts[bucket] = Z_LVAL_P(item);
                     }
@@ -707,11 +648,7 @@ PHP_FUNCTION(hdr_import)
         ZEND_HASH_FOREACH_KEY_VAL(Z_ARRVAL_P(value), num_key, key, item) {
             if (!key) {
                 if (num_key < hdr->counts_len) {
-#if PHP_VERSION_ID >= 70000
                     convert_to_long_ex(item);
-#else
-                    convert_to_long_ex(&item);
-#endif
                     if (Z_LVAL_P(item) > 0) {
                         hdr->counts[num_key] = Z_LVAL_P(item);
                     }
@@ -746,11 +683,7 @@ PHP_FUNCTION(hdr_base64_encode)
         RETURN_FALSE;
     }
 
-#if PHP_VERSION_ID >= 70000
     RETURN_STRING(result);
-#else
-    RETURN_STRING(result, 1);
-#endif
 }
 
 PHP_FUNCTION(hdr_base64_decode)
