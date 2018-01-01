@@ -577,12 +577,7 @@ PHP_FUNCTION(hdr_import)
     value = hdr_hash_find(Z_ARRVAL_P(import), "c", 2);
 
     // version 1 format
-    if (value != NULL) {
-        if (Z_TYPE_P(value) != IS_ARRAY) {
-            php_error_docref(NULL TSRMLS_CC, E_WARNING, "Count is required to be an array.");
-            RETURN_FALSE;
-        }
-
+    if (value != NULL && Z_TYPE_P(value) == IS_ARRAY) {
         count = zend_hash_num_elements(Z_ARRVAL_P(value));
 
         res = hdr_init(lowest_trackable_value, highest_trackable_value, significant_figures, &hdr);
@@ -625,12 +620,7 @@ PHP_FUNCTION(hdr_import)
     value = hdr_hash_find(Z_ARRVAL_P(import), "b", 2);
 
     // version 2 format
-    if (value != NULL) {
-        if (Z_TYPE_P(value) != IS_ARRAY) {
-            php_error_docref(NULL TSRMLS_CC, E_WARNING, "Count is required to be an array.");
-            RETURN_FALSE;
-        }
-
+    if (value != NULL && Z_TYPE_P(value) == IS_ARRAY) {
         res = hdr_init(lowest_trackable_value, highest_trackable_value, significant_figures, &hdr);
 
         if (res == 0) {
@@ -660,7 +650,7 @@ PHP_FUNCTION(hdr_import)
         hdr->normalizing_index_offset = 0;
         hdr->conversion_ratio = 1.0;
     } else {
-        php_error_docref(NULL TSRMLS_CC, E_WARNING, "Missing counts (c) or bucket (b) key.");
+        php_error_docref(NULL TSRMLS_CC, E_WARNING, "Missing counts (c) or bucket (b) key or not arrays.");
         RETURN_FALSE;
     }
 }

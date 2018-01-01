@@ -11,10 +11,10 @@
   <active>yes</active>
  </lead>
  <date>2018-01-01</date>
- <time>15:10:00</time>
+ <time>16:05:00</time>
  <version>
-  <release>0.4.0</release>
-  <api>0.4.0</api>
+  <release>0.4.1</release>
+  <api>0.4.1</api>
  </version>
  <stability>
   <release>beta</release>
@@ -119,6 +119,21 @@
    <notes>
     - Introduce new hdr_import/hdr_export serialization format that saves a lot of space and improves performance.
     - Remove PHP 5 support
+   </notes>
+  </release>
+  <release>
+   <date>2018-01-01</date>
+   <version>
+    <release>0.4.1</release>
+    <api>0.4.1</api>
+   </version>
+   <stability>
+    <release>beta</release>
+    <api>beta</api>
+   </stability>
+   <license uri="https://opensource.org/licenses/BSD-2-Clause">New BSD</license>
+   <notes>
+    - Improve validation in hdr_import
    </notes>
   </release>
  </changelog>
