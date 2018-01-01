@@ -32,49 +32,27 @@ while ($data = hdr_iter_next($iter)) {
 }
 
 --EXPECTF--
-array(4) {
-  ["ltv"]=>
-  int(1)
+array(2) {
   ["htv"]=>
   int(1000)
-  ["sf"]=>
-  int(2)
-  ["c"]=>
+  ["b"]=>
   array(0) {
   }
 }
-array(5) {
-  ["ltv"]=>
-  int(1)
+array(2) {
   ["htv"]=>
   int(1000)
-  ["sf"]=>
-  int(2)
-  ["c"]=>
-  array(10) {
-    [0]=>
-    float(10)
+  ["b"]=>
+  array(4) {
     [1]=>
-    float(20)
+    float(10)
     [2]=>
-    float(25)
+    float(20)
     [3]=>
-    float(0)
-    [4]=>
-    float(0)
-    [5]=>
-    float(0)
-    [6]=>
-    float(0)
-    [7]=>
-    float(0)
-    [8]=>
-    float(0)
-    [9]=>
+    float(25)
+    [10]=>
     float(10)
   }
-  ["sk"]=>
-  int(1)
 }
 SUCCESS
 1: 10

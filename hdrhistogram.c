@@ -526,14 +526,14 @@ PHP_FUNCTION(hdr_export)
 {
     zval *zhdr;
 #if PHP_VERSION_ID >= 70000
-    zval counts_v;
-    zval *counts = &counts_v;
+    zval buckets_v;
+    zval *buckets = &buckets_v;
 #else
-    zval *counts;
+    zval *buckets;
 #endif
     int32_t i;
     struct hdr_histogram *hdr;
-    int found = 0, skipped = 0;
+    int found = 0;
 
     if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "r", &zhdr) == FAILURE) {
         RETURN_FALSE;
@@ -542,32 +542,35 @@ PHP_FUNCTION(hdr_export)
     hdr = hdr_fetch_resource(zhdr, return_value TSRMLS_CC);
 
     array_init(return_value);
-    add_assoc_long(return_value, "ltv", hdr->lowest_trackable_value);
-    add_assoc_long(return_value, "htv", hdr->highest_trackable_value);
-    add_assoc_long(return_value, "sf", hdr->significant_figures);
+
+    if (hdr->lowest_trackable_value > 1) {
+        add_assoc_long(return_value, "ltv", hdr->lowest_trackable_value);
+    }
+    if (hdr->highest_trackable_value != 60000) {
+        add_assoc_long(return_value, "htv", hdr->highest_trackable_value);
+    }
+    if (hdr->significant_figures != 2) {
+        add_assoc_long(return_value, "sf", hdr->significant_figures);
+    }
 
 #if PHP_VERSION_ID < 70000
-    MAKE_STD_ZVAL(counts);
+    MAKE_STD_ZVAL(buckets);
 #endif
-    array_init(counts);
+    array_init(buckets);
 
     for (i = 0; i < hdr->counts_len; i++) {
         if (found >= hdr->total_count) {
             break;
         }
-        if (found == 0 && hdr->counts[i] == 0) {
-            skipped++;
+        if (hdr->counts[i] == 0) {
             continue;
         }
 
-        add_next_index_double(counts, hdr->counts[i]);
+        add_index_double(buckets, i, hdr->counts[i]);
         found += hdr->counts[i];
     }
 
-    add_assoc_zval(return_value, "c", counts);
-    if (skipped > 0) {
-        add_assoc_long(return_value, "sk", skipped);
-    }
+    add_assoc_zval(return_value, "b", buckets);
 }
 
 PHP_FUNCTION(hdr_import)
@@ -585,21 +588,33 @@ PHP_FUNCTION(hdr_import)
     if (value = hdr_hash_find(Z_ARRVAL_P(import), "ltv", 4)) {
         lowest_trackable_value = Z_LVAL_P(value);
     } else {
-        php_error_docref(NULL TSRMLS_CC, E_WARNING, "Missing lowest_trackable_value (ltv) key.");
+        lowest_trackable_value = 1;
+    }
+
+    if (lowest_trackable_value <= 0) {
+        php_error_docref(NULL TSRMLS_CC, E_WARNING, "lowest_trackable_value (ltv) must be >= 1.");
         RETURN_FALSE;
     }
 
     if (value = hdr_hash_find(Z_ARRVAL_P(import), "htv", 4)) {
         highest_trackable_value = Z_LVAL_P(value);
     } else {
-        php_error_docref(NULL TSRMLS_CC, E_WARNING, "Missing highest_trackable_value (htv) key.");
+        highest_trackable_value = 60000;
+    }
+
+    if (highest_trackable_value <= 0) {
+        php_error_docref(NULL TSRMLS_CC, E_WARNING, "highest_trackable_value (htv) must be >= 1.");
         RETURN_FALSE;
     }
 
     if (value = hdr_hash_find(Z_ARRVAL_P(import), "sf", 3)) {
         significant_figures = Z_LVAL_P(value);
     } else {
-        php_error_docref(NULL TSRMLS_CC, E_WARNING, "Missing significant_figures (sf) key.");
+        significant_figures = 2;
+    }
+
+    if (significant_figures <= 0 || significant_figures > 3) {
+        php_error_docref(NULL TSRMLS_CC, E_WARNING, "significant_figures (sf) must be 1, 2, or 3.");
         RETURN_FALSE;
     }
 
@@ -616,53 +631,101 @@ PHP_FUNCTION(hdr_import)
 
     value = hdr_hash_find(Z_ARRVAL_P(import), "c", 2);
 
-    if (value == NULL) {
-        php_error_docref(NULL TSRMLS_CC, E_WARNING, "Missing counts (c) key.");
-        RETURN_FALSE;
-    }
-
-    if (Z_TYPE_P(value) != IS_ARRAY) {
-        php_error_docref(NULL TSRMLS_CC, E_WARNING, "Count is required to be an array.");
-        RETURN_FALSE;
-    }
-
-    count = zend_hash_num_elements(Z_ARRVAL_P(value));
-
-    res = hdr_init(lowest_trackable_value, highest_trackable_value, significant_figures, &hdr);
-
-    if (res == 0) {
-        hdr_register_hdr_resource(return_value, hdr TSRMLS_CC);
-    } else if (res == EINVAL) {
-        php_error_docref(NULL TSRMLS_CC, E_WARNING, "Lowest trackable value has to be >= 1.");
-
-        RETURN_FALSE;
-    } else if (res == ENOMEM) {
-        perror("Memory error in hdr_init allocation.");
-    }
-
-    for (i = 0; i < skipped; i++) {
-        if (i < hdr->counts_len) {
-            hdr->counts[i] = 0;
+    // version 1 format
+    if (value != NULL) {
+        if (Z_TYPE_P(value) != IS_ARRAY) {
+            php_error_docref(NULL TSRMLS_CC, E_WARNING, "Count is required to be an array.");
+            RETURN_FALSE;
         }
-    }
 
-    for (i = 0; i < count; i++) {
-        if (item = hdr_hash_index_find(Z_ARRVAL_P(value), i)) {
-            bucket = i + skipped;
-            if (bucket < hdr->counts_len) {
-#if PHP_VERSION_ID >= 70000
-                convert_to_long_ex(item);
-#else
-                convert_to_long_ex(&item);
-#endif
-                hdr->counts[bucket] = Z_LVAL_P(item);
+        count = zend_hash_num_elements(Z_ARRVAL_P(value));
+
+        res = hdr_init(lowest_trackable_value, highest_trackable_value, significant_figures, &hdr);
+
+        if (res == 0) {
+            hdr_register_hdr_resource(return_value, hdr TSRMLS_CC);
+        } else if (res == EINVAL) {
+            php_error_docref(NULL TSRMLS_CC, E_WARNING, "Lowest trackable value has to be >= 1.");
+
+            RETURN_FALSE;
+        } else if (res == ENOMEM) {
+            perror("Memory error in hdr_init allocation.");
+        }
+
+        for (i = 0; i < skipped; i++) {
+            if (i < hdr->counts_len) {
+                hdr->counts[i] = 0;
             }
         }
+
+        for (i = 0; i < count; i++) {
+            if (item = hdr_hash_index_find(Z_ARRVAL_P(value), i)) {
+                bucket = i + skipped;
+                if (bucket < hdr->counts_len) {
+#if PHP_VERSION_ID >= 70000
+                    convert_to_long_ex(item);
+#else
+                    convert_to_long_ex(&item);
+#endif
+                    if (Z_LVAL_P(item) > 0) {
+                        hdr->counts[bucket] = Z_LVAL_P(item);
+                    }
+                }
+            }
+        }
+
+        hdr_reset_internal_counters(hdr);
+        hdr->normalizing_index_offset = 0;
+        hdr->conversion_ratio = 1.0;
+
+        return;
     }
 
-    hdr_reset_internal_counters(hdr);
-    hdr->normalizing_index_offset = 0;
-    hdr->conversion_ratio = 1.0;
+    value = hdr_hash_find(Z_ARRVAL_P(import), "b", 2);
+
+    // version 2 format
+    if (value != NULL) {
+        if (Z_TYPE_P(value) != IS_ARRAY) {
+            php_error_docref(NULL TSRMLS_CC, E_WARNING, "Count is required to be an array.");
+            RETURN_FALSE;
+        }
+
+        res = hdr_init(lowest_trackable_value, highest_trackable_value, significant_figures, &hdr);
+
+        if (res == 0) {
+            hdr_register_hdr_resource(return_value, hdr TSRMLS_CC);
+        } else if (res == EINVAL) {
+            php_error_docref(NULL TSRMLS_CC, E_WARNING, "Lowest trackable value has to be >= 1.");
+
+            RETURN_FALSE;
+        } else if (res == ENOMEM) {
+            perror("Memory error in hdr_init allocation.");
+        }
+
+        zend_string *key;
+        ulong num_key;
+        ZEND_HASH_FOREACH_KEY_VAL(Z_ARRVAL_P(value), num_key, key, item) {
+            if (!key) {
+                if (num_key < hdr->counts_len) {
+#if PHP_VERSION_ID >= 70000
+                    convert_to_long_ex(item);
+#else
+                    convert_to_long_ex(&item);
+#endif
+                    if (Z_LVAL_P(item) > 0) {
+                        hdr->counts[num_key] = Z_LVAL_P(item);
+                    }
+                }
+            }
+        } ZEND_HASH_FOREACH_END();
+
+        hdr_reset_internal_counters(hdr);
+        hdr->normalizing_index_offset = 0;
+        hdr->conversion_ratio = 1.0;
+    } else {
+        php_error_docref(NULL TSRMLS_CC, E_WARNING, "Missing counts (c) or bucket (b) key.");
+        RETURN_FALSE;
+    }
 }
 
 PHP_FUNCTION(hdr_base64_encode)
