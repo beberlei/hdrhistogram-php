@@ -13,24 +13,36 @@ var_dump(hdr_export($imported));
 var_dump(hdr_export(hdr_import(hdr_export($imported))));
 --EXPECTF--
 array(1) {
-  ["b"]=>
-  array(3) {
-    [106]=>
-    float(1)
-    [290]=>
-    float(1)
-    [735]=>
-    float(1)
+  ["v"]=>
+  array(6) {
+    [0]=>
+    int(-106)
+    [1]=>
+    int(1)
+    [2]=>
+    int(-183)
+    [3]=>
+    int(1)
+    [4]=>
+    int(-444)
+    [5]=>
+    int(1)
   }
 }
 array(1) {
-  ["b"]=>
-  array(3) {
-    [106]=>
-    float(1)
-    [290]=>
-    float(1)
-    [735]=>
-    float(1)
+  ["v"]=>
+  array(6) {
+    [0]=>
+    int(-106)
+    [1]=>
+    int(1)
+    [2]=>
+    int(-183)
+    [3]=>
+    int(1)
+    [4]=>
+    int(-444)
+    [5]=>
+    int(1)
   }
 }

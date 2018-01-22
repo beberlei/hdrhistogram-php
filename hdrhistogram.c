@@ -477,11 +477,11 @@ PHP_FUNCTION(hdr_percentile_iter_next)
 PHP_FUNCTION(hdr_export)
 {
     zval *zhdr;
-    zval buckets_v;
-    zval *buckets = &buckets_v;
+    zval values;
     int32_t i;
     struct hdr_histogram *hdr;
     int found = 0;
+    long skipped = 0;
 
     if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "r", &zhdr) == FAILURE) {
         RETURN_FALSE;
@@ -501,21 +501,26 @@ PHP_FUNCTION(hdr_export)
         add_assoc_long(return_value, "sf", hdr->significant_figures);
     }
 
-    array_init(buckets);
+    array_init(&values);
 
     for (i = 0; i < hdr->counts_len; i++) {
         if (found >= hdr->total_count) {
             break;
         }
         if (hdr->counts[i] == 0) {
-            continue;
+            skipped--;
+        } else {
+            if (skipped < 0) {
+                add_next_index_long(&values, skipped);
+                skipped = 0;
+            }
+            add_next_index_long(&values, (long)hdr->counts[i]);
         }
 
-        add_index_double(buckets, i, hdr->counts[i]);
         found += hdr->counts[i];
     }
 
-    add_assoc_zval(return_value, "b", buckets);
+    add_assoc_zval(return_value, "v", &values);
 }
 
 PHP_FUNCTION(hdr_import)
@@ -572,6 +577,45 @@ PHP_FUNCTION(hdr_import)
     if (skipped < 0 || lowest_trackable_value < 1 || highest_trackable_value < lowest_trackable_value || significant_figures < 1) {
         php_error_docref(NULL TSRMLS_CC, E_WARNING, "Invalid values for ltv, htv, sf or sk keys given.");
         RETURN_FALSE;
+    }
+
+    value = hdr_hash_find(Z_ARRVAL_P(import), "v", 2);
+
+    // version 3 format
+    if (value != NULL && Z_TYPE_P(value) == IS_ARRAY) {
+        count = zend_hash_num_elements(Z_ARRVAL_P(value));
+        res = hdr_init(lowest_trackable_value, highest_trackable_value, significant_figures, &hdr);
+
+        if (res == 0) {
+            hdr_register_hdr_resource(return_value, hdr TSRMLS_CC);
+        } else if (res == EINVAL) {
+            php_error_docref(NULL TSRMLS_CC, E_WARNING, "Lowest trackable value has to be >= 1.");
+
+            RETURN_FALSE;
+        } else if (res == ENOMEM) {
+            perror("Memory error in hdr_init allocation.");
+        }
+
+        zend_string *key;
+        ulong num_key;
+        int bucket = 0;
+        ZEND_HASH_FOREACH_KEY_VAL(Z_ARRVAL_P(value), num_key, key, item) {
+            if (!key && bucket < hdr->counts_len) {
+                convert_to_long_ex(item);
+                if (Z_LVAL_P(item) > 0) {
+                    hdr->counts[bucket] = Z_LVAL_P(item);
+                    bucket++;
+                } else {
+                    bucket += (Z_LVAL_P(item) * -1);
+                }
+            }
+        } ZEND_HASH_FOREACH_END();
+
+        hdr_reset_internal_counters(hdr);
+        hdr->normalizing_index_offset = 0;
+        hdr->conversion_ratio = 1.0;
+
+        return;
     }
 
     value = hdr_hash_find(Z_ARRVAL_P(import), "c", 2);

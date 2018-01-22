@@ -10,16 +10,20 @@ var_dump(hdr_export($imported));
 var_dump(hdr_export(hdr_import(hdr_export($imported))));
 --EXPECTF--
 array(1) {
-  ["b"]=>
-  array(1) {
-    [331]=>
-    float(1)
+  ["v"]=>
+  array(2) {
+    [0]=>
+    int(-331)
+    [1]=>
+    int(1)
   }
 }
 array(1) {
-  ["b"]=>
-  array(1) {
-    [331]=>
-    float(1)
+  ["v"]=>
+  array(2) {
+    [0]=>
+    int(-331)
+    [1]=>
+    int(1)
   }
 }

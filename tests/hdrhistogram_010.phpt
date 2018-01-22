@@ -22,6 +22,8 @@ if (hdr_mean($imported) === hdr_mean($hdr)) {
     echo "SUCCESS\n";
 } else {
     echo "FAILURE\n";
+    echo hdr_mean($imported) . "\n";
+    echo hdr_mean($hdr) . "\n";
 }
 
 $iter = hdr_iter_init($imported);
@@ -35,23 +37,27 @@ while ($data = hdr_iter_next($iter)) {
 array(2) {
   ["htv"]=>
   int(1000)
-  ["b"]=>
+  ["v"]=>
   array(0) {
   }
 }
 array(2) {
   ["htv"]=>
   int(1000)
-  ["b"]=>
-  array(4) {
+  ["v"]=>
+  array(6) {
+    [0]=>
+    int(-1)
     [1]=>
-    float(10)
+    int(10)
     [2]=>
-    float(20)
+    int(20)
     [3]=>
-    float(25)
-    [10]=>
-    float(10)
+    int(25)
+    [4]=>
+    int(-6)
+    [5]=>
+    int(10)
   }
 }
 SUCCESS
