@@ -5,7 +5,7 @@
 
 extern zend_module_entry hdrhistogram_module_entry;
 #define phpext_hdrhistogram_ptr &hdrhistogram_module_entry
-#define HDR_VERSION "0.4.1"
+#define HDR_VERSION "0.4.2"
 
 PHP_MINIT_FUNCTION(hdrhistogram);
 PHP_MSHUTDOWN_FUNCTION(hdrhistogram);
