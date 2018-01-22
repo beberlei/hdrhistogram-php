@@ -9,7 +9,7 @@ $imported = hdr_import($payload);
 var_dump(hdr_export($imported));
 var_dump(hdr_export(hdr_import(hdr_export($imported))));
 var_dump(hdr_value_at_percentile($imported, 95));
-int(121)
+var_dump(hdr_value_at_percentile(hdr_import(hdr_export($imported)), 95));
 --EXPECTF--
 array(1) {
   ["v"]=>
@@ -37,3 +37,5 @@ array(1) {
     int(1)
   }
 }
+int(121)
+int(121)
