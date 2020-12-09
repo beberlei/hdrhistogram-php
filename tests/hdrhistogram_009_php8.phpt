@@ -2,7 +2,7 @@
 hdrhistogram: Base64 Encode/Decode
 --SKIPIF--
 <?php
-if (PHP_VERSION_ID >= 80000) die("skip PHP < 8 only");
+if (PHP_VERSION_ID < 80000) die("skip PHP 8 only");
 ?>
 --FILE--
 <?php
@@ -26,7 +26,11 @@ while ($data = hdr_iter_next($iterator)) {
 }
 echo "Total: $total\n";
 
-echo hdr_base64_encode("foo");
+try {
+    echo hdr_base64_encode("foo");
+} catch (TypeError $e) {
+	echo $e->getMessage()."\n";
+}
 echo hdr_base64_decode("foo");
 
 echo hdr_max(hdr_base64_decode(hdr_base64_encode(hdr_init(1, 100, 1))));
@@ -89,8 +93,7 @@ echo hdr_max(hdr_base64_decode(hdr_base64_encode(hdr_init(1, 100, 1))));
 92: 4
 96: 4
 Total: 100
+hdr_base64_encode(): Argument #1 ($hdr) must be of type resource, string given
 
-Warning: hdr_base64_encode() expects parameter 1 to be resource, string given in %s on line 22
-
-Warning: hdr_base64_decode(): Cannot decode histogram in %s on line 23
+Warning: hdr_base64_decode(): Cannot decode histogram in %s on line %d
 0

@@ -1,5 +1,9 @@
 --TEST--
 HdrHistogram: hdr_import Error Handling
+--SKIPIF--
+<?php
+if (PHP_VERSION_ID >= 80000) die("skip PHP < 8 only");
+?>
 --FILE--
 <?php
 
