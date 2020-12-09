@@ -1,5 +1,5 @@
 /* This is a generated file, edit the .stub.php file instead.
- * Stub hash: 195b1ceef170a9dd44acc536ff6ae157b79648be */
+ * Stub hash: abeaa5bc3b04ddf09db9de6645b72260090df7c3 */
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_hdr_init, 0, 0, 3)
 	ZEND_ARG_TYPE_INFO(0, lowest_trackable_value, IS_LONG, 0)
@@ -22,7 +22,7 @@ ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_hdr_record_values, 0, 3, _IS_BOO
 	ZEND_ARG_TYPE_INFO(0, count, IS_LONG, 0)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_hdr_record_corrected_value, 0, 3, IS_VOID, 0)
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_hdr_record_corrected_value, 0, 3, _IS_BOOL, 0)
 	ZEND_ARG_INFO(0, hdr)
 	ZEND_ARG_TYPE_INFO(0, value, IS_LONG, 0)
 	ZEND_ARG_TYPE_INFO(0, expected_interval, IS_LONG, 0)

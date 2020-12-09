@@ -136,7 +136,9 @@ PHP_FUNCTION(hdr_init)
 
         RETURN_FALSE;
     } else if (res == ENOMEM) {
-        perror("Memory error in hdr_init allocation.");
+        php_error_docref(NULL, E_WARNING, "Memory error in hdr_init allocation.");
+
+        RETURN_FALSE;
     }
 }
 
@@ -277,7 +279,10 @@ PHP_FUNCTION(hdr_record_corrected_value)
 
     hdr = hdr_fetch_resource(zhdr, return_value);
 
-    hdr_record_corrected_value(hdr, value, expected_interval);
+    if (hdr_record_corrected_value(hdr, value, expected_interval)) {
+        RETURN_TRUE;
+    }
+    RETURN_FALSE;
 }
 
 PHP_FUNCTION(hdr_reset)
@@ -349,7 +354,9 @@ PHP_FUNCTION(hdr_add)
 
         RETURN_FALSE;
     } else if (res == ENOMEM) {
-        perror("Memory error in hdr_init allocation.");
+        php_error_docref(NULL, E_WARNING, "Memory error in hdr_init allocation.");
+
+        RETURN_FALSE;
     }
 }
 
@@ -572,7 +579,9 @@ PHP_FUNCTION(hdr_import)
 
             RETURN_FALSE;
         } else if (res == ENOMEM) {
-            perror("Memory error in hdr_init allocation.");
+            php_error_docref(NULL, E_WARNING, "Memory error in hdr_init allocation.");
+
+            RETURN_FALSE;
         }
 
         zend_string *key;
@@ -612,7 +621,9 @@ PHP_FUNCTION(hdr_import)
 
             RETURN_FALSE;
         } else if (res == ENOMEM) {
-            perror("Memory error in hdr_init allocation.");
+            php_error_docref(NULL, E_WARNING, "Memory error in hdr_init allocation.");
+
+            RETURN_FALSE;
         }
 
         for (i = 0; i < skipped; i++) {
@@ -653,7 +664,9 @@ PHP_FUNCTION(hdr_import)
 
             RETURN_FALSE;
         } else if (res == ENOMEM) {
-            perror("Memory error in hdr_init allocation.");
+            php_error_docref(NULL, E_WARNING, "Memory error in hdr_init allocation.");
+
+            RETURN_FALSE;
         }
 
         zend_string *key;

@@ -28,7 +28,7 @@ function hdr_record_values($hdr, int $value, int $count): bool {};
 /**
  * @param resource $hdr
  */
-function hdr_record_corrected_value($hdr, int $value, int $expected_interval): void {};
+function hdr_record_corrected_value($hdr, int $value, int $expected_interval): bool {};
 
 /**
  * @param resource $hdr
