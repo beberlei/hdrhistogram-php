@@ -7,6 +7,12 @@
 #include "hdr/hdr_histogram_log.h"
 #include "php_hdrhistogram.h"
 
+#if PHP_VERSION_ID < 80000
+#include "hdrhistogram_legacy_arginfo.h"
+#else
+#include "hdrhistogram_arginfo.h"
+#endif
+
 #define PHP_HDRHISTOGRAM_DESCRIPTOR_RES_NAME "hdr_histogram"
 
 static int le_hdrhistogram_descriptor;
@@ -14,24 +20,24 @@ static int le_hdrhistogram_iter_descriptor;
 
 #define strsize_t size_t
 
-static zend_always_inline void hdr_register_hdr_resource(zval *return_value, struct hdr_histogram* hdr TSRMLS_DC)
+static zend_always_inline void hdr_register_hdr_resource(zval *return_value, struct hdr_histogram* hdr)
 {
     ZVAL_RES(return_value, zend_register_resource(hdr, le_hdrhistogram_descriptor));
 }
 
-static zend_always_inline void hdr_register_iter_resource(zval *return_value, struct hdr_iter* iter TSRMLS_DC)
+static zend_always_inline void hdr_register_iter_resource(zval *return_value, struct hdr_iter* iter)
 {
     ZVAL_RES(return_value, zend_register_resource(iter, le_hdrhistogram_iter_descriptor));
 }
 
-static zend_always_inline struct hdr_histogram* hdr_fetch_resource(zval *res, zval *return_value TSRMLS_DC)
+static zend_always_inline struct hdr_histogram* hdr_fetch_resource(zval *res, zval *return_value)
 {
     struct hdr_histogram *hdr;
 
     return (struct hdr_histogram*)zend_fetch_resource(Z_RES_P(res), PHP_HDRHISTOGRAM_DESCRIPTOR_RES_NAME, le_hdrhistogram_descriptor);
 }
 
-static zend_always_inline struct hdr_iter* hdr_fetch_iterator(zval *res, zval *return_value TSRMLS_DC)
+static zend_always_inline struct hdr_iter* hdr_fetch_iterator(zval *res, zval *return_value)
 {
     struct hdr_iter *iterator;
 
@@ -48,37 +54,10 @@ static zend_always_inline zval* hdr_hash_index_find(HashTable *arr, zend_ulong h
     return zend_hash_index_find(arr, h);
 }
 
-zend_function_entry hdrhistogram_functions[] = {
-    PHP_FE(hdr_init, NULL)
-    PHP_FE(hdr_get_memory_size, NULL)
-    PHP_FE(hdr_record_value, NULL)
-    PHP_FE(hdr_record_values, NULL)
-    PHP_FE(hdr_record_corrected_value, NULL)
-    PHP_FE(hdr_mean, NULL)
-    PHP_FE(hdr_stddev, NULL)
-    PHP_FE(hdr_min, NULL)
-    PHP_FE(hdr_max, NULL)
-    PHP_FE(hdr_total_count, NULL)
-    PHP_FE(hdr_reset, NULL)
-    PHP_FE(hdr_count_at_value, NULL)
-    PHP_FE(hdr_value_at_percentile, NULL)
-    PHP_FE(hdr_add, NULL)
-    PHP_FE(hdr_merge_into, NULL)
-    PHP_FE(hdr_iter_init, NULL)
-    PHP_FE(hdr_iter_next, NULL)
-    PHP_FE(hdr_percentile_iter_init, NULL)
-    PHP_FE(hdr_percentile_iter_next, NULL)
-    PHP_FE(hdr_export, NULL)
-    PHP_FE(hdr_import, NULL)
-    PHP_FE(hdr_base64_encode, NULL)
-    PHP_FE(hdr_base64_decode, NULL)
-    { NULL, NULL, NULL }
-};
-
 zend_module_entry hdrhistogram_module_entry = {
     STANDARD_MODULE_HEADER,
     "hdrhistogram",
-    hdrhistogram_functions,                /* List of functions exposed */
+    ext_functions,                         /* List of functions exposed */
     PHP_MINIT(hdrhistogram),               /* Module init callback */
     PHP_MSHUTDOWN(hdrhistogram),           /* Module shutdown callback */
     PHP_RINIT(hdrhistogram),               /* Request init callback */
@@ -92,7 +71,7 @@ zend_module_entry hdrhistogram_module_entry = {
 ZEND_GET_MODULE(hdrhistogram)
 #endif
 
-static void php_hdrhistogram_descriptor_dtor(zend_resource *rsrc TSRMLS_DC)
+static void php_hdrhistogram_descriptor_dtor(zend_resource *rsrc)
 {
     free(rsrc->ptr);
 }
@@ -141,9 +120,9 @@ PHP_FUNCTION(hdr_init)
     long lowest_trackable_value, highest_trackable_value, significant_figures;
     int res;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "lll",
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "lll",
                 &lowest_trackable_value, &highest_trackable_value, &significant_figures) == FAILURE) {
-        php_error_docref(NULL TSRMLS_CC, E_WARNING, "Invalid arguments passed.");
+        php_error_docref(NULL, E_WARNING, "Invalid arguments passed.");
 
         RETURN_FALSE;
     }
@@ -151,13 +130,15 @@ PHP_FUNCTION(hdr_init)
     res = hdr_init(lowest_trackable_value, highest_trackable_value, significant_figures, &hdr);
 
     if (res == 0) {
-        hdr_register_hdr_resource(return_value, hdr TSRMLS_CC);
+        hdr_register_hdr_resource(return_value, hdr);
     } else if (res == EINVAL) {
-        php_error_docref(NULL TSRMLS_CC, E_WARNING, "Lowest trackable value has to be >= 1.");
+        php_error_docref(NULL, E_WARNING, "Lowest trackable value has to be >= 1.");
 
         RETURN_FALSE;
     } else if (res == ENOMEM) {
-        perror("Memory error in hdr_init allocation.");
+        php_error_docref(NULL, E_WARNING, "Memory error in hdr_init allocation.");
+
+        RETURN_FALSE;
     }
 }
 
@@ -166,11 +147,11 @@ PHP_FUNCTION(hdr_get_memory_size)
     struct hdr_histogram *hdr;
     zval *zhdr;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "r", &zhdr) == FAILURE) {
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "r", &zhdr) == FAILURE) {
         RETURN_FALSE;
     }
 
-    hdr = hdr_fetch_resource(zhdr, return_value TSRMLS_CC);
+    hdr = hdr_fetch_resource(zhdr, return_value);
 
     RETURN_LONG(hdr_get_memory_size(hdr));
 }
@@ -180,11 +161,11 @@ PHP_FUNCTION(hdr_mean)
     struct hdr_histogram *hdr;
     zval *zhdr;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "r", &zhdr) == FAILURE) {
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "r", &zhdr) == FAILURE) {
         RETURN_FALSE;
     }
 
-    hdr = hdr_fetch_resource(zhdr, return_value TSRMLS_CC);
+    hdr = hdr_fetch_resource(zhdr, return_value);
 
     RETURN_LONG(hdr_mean(hdr));
 }
@@ -194,11 +175,11 @@ PHP_FUNCTION(hdr_stddev)
     struct hdr_histogram *hdr;
     zval *zhdr;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "r", &zhdr) == FAILURE) {
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "r", &zhdr) == FAILURE) {
         RETURN_FALSE;
     }
 
-    hdr = hdr_fetch_resource(zhdr, return_value TSRMLS_CC);
+    hdr = hdr_fetch_resource(zhdr, return_value);
 
     RETURN_DOUBLE(hdr_stddev(hdr));
 }
@@ -209,11 +190,11 @@ PHP_FUNCTION(hdr_min)
     struct hdr_histogram *hdr;
     zval *zhdr;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "r", &zhdr) == FAILURE) {
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "r", &zhdr) == FAILURE) {
         RETURN_FALSE;
     }
 
-    hdr = hdr_fetch_resource(zhdr, return_value TSRMLS_CC);
+    hdr = hdr_fetch_resource(zhdr, return_value);
 
     RETURN_LONG(hdr_min(hdr));
 }
@@ -223,11 +204,11 @@ PHP_FUNCTION(hdr_max)
     struct hdr_histogram *hdr;
     zval *zhdr;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "r", &zhdr) == FAILURE) {
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "r", &zhdr) == FAILURE) {
         RETURN_FALSE;
     }
 
-    hdr = hdr_fetch_resource(zhdr, return_value TSRMLS_CC);
+    hdr = hdr_fetch_resource(zhdr, return_value);
 
     RETURN_LONG(hdr_max(hdr));
 }
@@ -237,11 +218,11 @@ PHP_FUNCTION(hdr_total_count)
     struct hdr_histogram *hdr;
     zval *zhdr;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "r", &zhdr) == FAILURE) {
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "r", &zhdr) == FAILURE) {
         RETURN_FALSE;
     }
 
-    hdr = hdr_fetch_resource(zhdr, return_value TSRMLS_CC);
+    hdr = hdr_fetch_resource(zhdr, return_value);
 
     RETURN_LONG(hdr->total_count);
 }
@@ -252,11 +233,11 @@ PHP_FUNCTION(hdr_record_value)
     zval *zhdr;
     long value;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "rl", &zhdr, &value) == FAILURE) {
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "rl", &zhdr, &value) == FAILURE) {
         RETURN_FALSE;
     }
 
-    hdr = hdr_fetch_resource(zhdr, return_value TSRMLS_CC);
+    hdr = hdr_fetch_resource(zhdr, return_value);
 
     if (hdr_record_value(hdr, value) == 0) {
         RETURN_FALSE;
@@ -272,11 +253,11 @@ PHP_FUNCTION(hdr_record_values)
     long value;
     long count;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "rll", &zhdr, &value, &count) == FAILURE) {
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "rll", &zhdr, &value, &count) == FAILURE) {
         RETURN_FALSE;
     }
 
-    hdr = hdr_fetch_resource(zhdr, return_value TSRMLS_CC);
+    hdr = hdr_fetch_resource(zhdr, return_value);
 
     if (hdr_record_values(hdr, value, count) == 0) {
         RETURN_FALSE;
@@ -292,13 +273,16 @@ PHP_FUNCTION(hdr_record_corrected_value)
     long value;
     long expected_interval;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "rll", &zhdr, &value, &expected_interval) == FAILURE) {
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "rll", &zhdr, &value, &expected_interval) == FAILURE) {
         RETURN_FALSE;
     }
 
-    hdr = hdr_fetch_resource(zhdr, return_value TSRMLS_CC);
+    hdr = hdr_fetch_resource(zhdr, return_value);
 
-    hdr_record_corrected_value(hdr, value, expected_interval);
+    if (hdr_record_corrected_value(hdr, value, expected_interval)) {
+        RETURN_TRUE;
+    }
+    RETURN_FALSE;
 }
 
 PHP_FUNCTION(hdr_reset)
@@ -306,11 +290,11 @@ PHP_FUNCTION(hdr_reset)
     struct hdr_histogram *hdr;
     zval *zhdr;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "r", &zhdr) == FAILURE) {
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "r", &zhdr) == FAILURE) {
         RETURN_FALSE;
     }
 
-    hdr = hdr_fetch_resource(zhdr, return_value TSRMLS_CC);
+    hdr = hdr_fetch_resource(zhdr, return_value);
 
     hdr_reset(hdr);
 }
@@ -321,11 +305,11 @@ PHP_FUNCTION(hdr_count_at_value)
     zval *zhdr;
     long value;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "rl", &zhdr, &value) == FAILURE) {
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "rl", &zhdr, &value) == FAILURE) {
         RETURN_FALSE;
     }
 
-    hdr = hdr_fetch_resource(zhdr, return_value TSRMLS_CC);
+    hdr = hdr_fetch_resource(zhdr, return_value);
 
     RETURN_LONG(hdr_count_at_value(hdr, value));
 }
@@ -336,11 +320,11 @@ PHP_FUNCTION(hdr_value_at_percentile)
     zval *zhdr;
     double percentile;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "rd", &zhdr, &percentile) == FAILURE) {
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "rd", &zhdr, &percentile) == FAILURE) {
         RETURN_FALSE;
     }
 
-    hdr = hdr_fetch_resource(zhdr, return_value TSRMLS_CC);
+    hdr = hdr_fetch_resource(zhdr, return_value);
 
     RETURN_LONG(hdr_value_at_percentile(hdr, percentile));
 }
@@ -351,12 +335,12 @@ PHP_FUNCTION(hdr_add)
     zval *a, *b;
     int res;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "rr", &a, &b) == FAILURE) {
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "rr", &a, &b) == FAILURE) {
         RETURN_FALSE;
     }
 
-    hdra = hdr_fetch_resource(a, return_value TSRMLS_CC);
-    hdrb = hdr_fetch_resource(b, return_value TSRMLS_CC);
+    hdra = hdr_fetch_resource(a, return_value);
+    hdrb = hdr_fetch_resource(b, return_value);
 
     res = hdr_init(hdra->lowest_trackable_value, hdra->highest_trackable_value, hdra->significant_figures, &hdr_new);
 
@@ -364,13 +348,15 @@ PHP_FUNCTION(hdr_add)
     hdr_add(hdr_new, hdrb);
 
     if (res == 0) {
-        hdr_register_hdr_resource(return_value, hdr_new TSRMLS_CC);
+        hdr_register_hdr_resource(return_value, hdr_new);
     } else if (res == EINVAL) {
-        php_error_docref(NULL TSRMLS_CC, E_WARNING, "Lowest trackable value has to be >= 1.");
+        php_error_docref(NULL, E_WARNING, "Lowest trackable value has to be >= 1.");
 
         RETURN_FALSE;
     } else if (res == ENOMEM) {
-        perror("Memory error in hdr_init allocation.");
+        php_error_docref(NULL, E_WARNING, "Memory error in hdr_init allocation.");
+
+        RETURN_FALSE;
     }
 }
 
@@ -379,12 +365,12 @@ PHP_FUNCTION(hdr_merge_into)
     struct hdr_histogram *hdra, *hdrb;
     zval *a, *b;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "rr", &a, &b) == FAILURE) {
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "rr", &a, &b) == FAILURE) {
         RETURN_FALSE;
     }
 
-    hdra = hdr_fetch_resource(a, return_value TSRMLS_CC);
-    hdrb = hdr_fetch_resource(b, return_value TSRMLS_CC);
+    hdra = hdr_fetch_resource(a, return_value);
+    hdrb = hdr_fetch_resource(b, return_value);
 
     RETURN_LONG(hdr_add(hdra, hdrb));
 }
@@ -395,16 +381,16 @@ PHP_FUNCTION(hdr_iter_init)
     struct hdr_histogram *hdr;
     zval *zhdr;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "r", &zhdr) == FAILURE) {
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "r", &zhdr) == FAILURE) {
         RETURN_FALSE;
     }
 
-    hdr = hdr_fetch_resource(zhdr, return_value TSRMLS_CC);
+    hdr = hdr_fetch_resource(zhdr, return_value);
 
     iterator = malloc(sizeof(struct hdr_iter));
     hdr_iter_init(iterator, hdr);
 
-    hdr_register_iter_resource(return_value, iterator TSRMLS_CC);
+    hdr_register_iter_resource(return_value, iterator);
 }
 
 PHP_FUNCTION(hdr_percentile_iter_init)
@@ -414,16 +400,16 @@ PHP_FUNCTION(hdr_percentile_iter_init)
     zval *zhdr;
     long ticks_per_half_distance;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "rl", &zhdr, &ticks_per_half_distance) == FAILURE) {
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "rl", &zhdr, &ticks_per_half_distance) == FAILURE) {
         RETURN_FALSE;
     }
 
-    hdr = hdr_fetch_resource(zhdr, return_value TSRMLS_CC);
+    hdr = hdr_fetch_resource(zhdr, return_value);
 
     iterator = malloc(sizeof(struct hdr_iter));
     hdr_iter_percentile_init(iterator, hdr, ticks_per_half_distance);
 
-    hdr_register_iter_resource(return_value, iterator TSRMLS_CC);
+    hdr_register_iter_resource(return_value, iterator);
 }
 
 PHP_FUNCTION(hdr_iter_next)
@@ -431,11 +417,11 @@ PHP_FUNCTION(hdr_iter_next)
     struct hdr_iter *iterator;
     zval *zhdr;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "r", &zhdr) == FAILURE) {
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "r", &zhdr) == FAILURE) {
         RETURN_FALSE;
     }
 
-    iterator = hdr_fetch_iterator(zhdr, return_value TSRMLS_CC);
+    iterator = hdr_fetch_iterator(zhdr, return_value);
 
     if (hdr_iter_next(iterator)) {
         array_init(return_value);
@@ -453,11 +439,11 @@ PHP_FUNCTION(hdr_percentile_iter_next)
     struct hdr_iter *iterator;
     zval *zhdr;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "r", &zhdr) == FAILURE) {
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "r", &zhdr) == FAILURE) {
         RETURN_FALSE;
     }
 
-    iterator = hdr_fetch_iterator(zhdr, return_value TSRMLS_CC);
+    iterator = hdr_fetch_iterator(zhdr, return_value);
 
     if (hdr_iter_next(iterator)) {
         array_init(return_value);
@@ -483,11 +469,11 @@ PHP_FUNCTION(hdr_export)
     int found = 0;
     long skipped = 0;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "r", &zhdr) == FAILURE) {
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "r", &zhdr) == FAILURE) {
         RETURN_FALSE;
     }
 
-    hdr = hdr_fetch_resource(zhdr, return_value TSRMLS_CC);
+    hdr = hdr_fetch_resource(zhdr, return_value);
 
     array_init(return_value);
 
@@ -531,7 +517,7 @@ PHP_FUNCTION(hdr_import)
     int res, count;
     zend_ulong i, bucket, skipped;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "a", &import) == FAILURE) {
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "a", &import) == FAILURE) {
         RETURN_FALSE;
     }
 
@@ -542,7 +528,7 @@ PHP_FUNCTION(hdr_import)
     }
 
     if (lowest_trackable_value <= 0) {
-        php_error_docref(NULL TSRMLS_CC, E_WARNING, "lowest_trackable_value (ltv) must be >= 1.");
+        php_error_docref(NULL, E_WARNING, "lowest_trackable_value (ltv) must be >= 1.");
         RETURN_FALSE;
     }
 
@@ -553,7 +539,7 @@ PHP_FUNCTION(hdr_import)
     }
 
     if (highest_trackable_value <= 0) {
-        php_error_docref(NULL TSRMLS_CC, E_WARNING, "highest_trackable_value (htv) must be >= 1.");
+        php_error_docref(NULL, E_WARNING, "highest_trackable_value (htv) must be >= 1.");
         RETURN_FALSE;
     }
 
@@ -564,7 +550,7 @@ PHP_FUNCTION(hdr_import)
     }
 
     if (significant_figures <= 0 || significant_figures > 3) {
-        php_error_docref(NULL TSRMLS_CC, E_WARNING, "significant_figures (sf) must be 1, 2, or 3.");
+        php_error_docref(NULL, E_WARNING, "significant_figures (sf) must be 1, 2, or 3.");
         RETURN_FALSE;
     }
 
@@ -575,7 +561,7 @@ PHP_FUNCTION(hdr_import)
     }
 
     if (skipped < 0 || lowest_trackable_value < 1 || highest_trackable_value < lowest_trackable_value || significant_figures < 1) {
-        php_error_docref(NULL TSRMLS_CC, E_WARNING, "Invalid values for ltv, htv, sf or sk keys given.");
+        php_error_docref(NULL, E_WARNING, "Invalid values for ltv, htv, sf or sk keys given.");
         RETURN_FALSE;
     }
 
@@ -587,13 +573,15 @@ PHP_FUNCTION(hdr_import)
         res = hdr_init(lowest_trackable_value, highest_trackable_value, significant_figures, &hdr);
 
         if (res == 0) {
-            hdr_register_hdr_resource(return_value, hdr TSRMLS_CC);
+            hdr_register_hdr_resource(return_value, hdr);
         } else if (res == EINVAL) {
-            php_error_docref(NULL TSRMLS_CC, E_WARNING, "Lowest trackable value has to be >= 1.");
+            php_error_docref(NULL, E_WARNING, "Lowest trackable value has to be >= 1.");
 
             RETURN_FALSE;
         } else if (res == ENOMEM) {
-            perror("Memory error in hdr_init allocation.");
+            php_error_docref(NULL, E_WARNING, "Memory error in hdr_init allocation.");
+
+            RETURN_FALSE;
         }
 
         zend_string *key;
@@ -627,13 +615,15 @@ PHP_FUNCTION(hdr_import)
         res = hdr_init(lowest_trackable_value, highest_trackable_value, significant_figures, &hdr);
 
         if (res == 0) {
-            hdr_register_hdr_resource(return_value, hdr TSRMLS_CC);
+            hdr_register_hdr_resource(return_value, hdr);
         } else if (res == EINVAL) {
-            php_error_docref(NULL TSRMLS_CC, E_WARNING, "Lowest trackable value has to be >= 1.");
+            php_error_docref(NULL, E_WARNING, "Lowest trackable value has to be >= 1.");
 
             RETURN_FALSE;
         } else if (res == ENOMEM) {
-            perror("Memory error in hdr_init allocation.");
+            php_error_docref(NULL, E_WARNING, "Memory error in hdr_init allocation.");
+
+            RETURN_FALSE;
         }
 
         for (i = 0; i < skipped; i++) {
@@ -668,13 +658,15 @@ PHP_FUNCTION(hdr_import)
         res = hdr_init(lowest_trackable_value, highest_trackable_value, significant_figures, &hdr);
 
         if (res == 0) {
-            hdr_register_hdr_resource(return_value, hdr TSRMLS_CC);
+            hdr_register_hdr_resource(return_value, hdr);
         } else if (res == EINVAL) {
-            php_error_docref(NULL TSRMLS_CC, E_WARNING, "Lowest trackable value has to be >= 1.");
+            php_error_docref(NULL, E_WARNING, "Lowest trackable value has to be >= 1.");
 
             RETURN_FALSE;
         } else if (res == ENOMEM) {
-            perror("Memory error in hdr_init allocation.");
+            php_error_docref(NULL, E_WARNING, "Memory error in hdr_init allocation.");
+
+            RETURN_FALSE;
         }
 
         zend_string *key;
@@ -694,7 +686,7 @@ PHP_FUNCTION(hdr_import)
         hdr->normalizing_index_offset = 0;
         hdr->conversion_ratio = 1.0;
     } else {
-        php_error_docref(NULL TSRMLS_CC, E_WARNING, "Missing counts (c) or bucket (b) key or not arrays.");
+        php_error_docref(NULL, E_WARNING, "Missing counts (c) or bucket (b) key or not arrays.");
         RETURN_FALSE;
     }
 }
@@ -705,14 +697,14 @@ PHP_FUNCTION(hdr_base64_encode)
     zval *zhdr;
     char *result = NULL;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "r", &zhdr) == FAILURE) {
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "r", &zhdr) == FAILURE) {
         RETURN_FALSE;
     }
 
-    hdr = hdr_fetch_resource(zhdr, return_value TSRMLS_CC);
+    hdr = hdr_fetch_resource(zhdr, return_value);
 
     if (hdr_log_encode(hdr, &result) != 0) {
-        php_error_docref(NULL TSRMLS_CC, E_WARNING, "Cannot encode histogram");
+        php_error_docref(NULL, E_WARNING, "Cannot encode histogram");
 
         RETURN_FALSE;
     }
@@ -726,15 +718,15 @@ PHP_FUNCTION(hdr_base64_decode)
     char *data = NULL;
     strsize_t data_len;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &data, &data_len) == FAILURE) {
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "s", &data, &data_len) == FAILURE) {
         RETURN_FALSE;
     }
 
     if (hdr_log_decode(&hdr, data, data_len) != 0) {
-        php_error_docref(NULL TSRMLS_CC, E_WARNING, "Cannot decode histogram");
+        php_error_docref(NULL, E_WARNING, "Cannot decode histogram");
 
         RETURN_FALSE;
     }
 
-    hdr_register_hdr_resource(return_value, hdr TSRMLS_CC);
+    hdr_register_hdr_resource(return_value, hdr);
 }

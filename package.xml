@@ -29,6 +29,9 @@
    <file name="config.m4"    role="src" />
    <file name="php_hdrhistogram.h" role="src" />
    <file name="hdrhistogram.c" role="src" />
+   <file name="hdrhistogram.stub.php" role="src" />
+   <file name="hdrhistogram_arginfo.h" role="src" />
+   <file name="hdrhistogram_legacy_arginfo.h" role="src" />
    <file name="README.md" role="doc" />
    <file name="LICENSE" role="doc" />
    <dir name="tests">
@@ -40,9 +43,12 @@
     <file name="hdrhistogram_006.phpt" role="test" />
     <file name="hdrhistogram_007.phpt" role="test" />
     <file name="hdrhistogram_008.phpt" role="test" />
+    <file name="hdrhistogram_009.phpt" role="test" />
+    <file name="hdrhistogram_009_php8.phpt" role="test" />
     <file name="hdrhistogram_010.phpt" role="test" />
     <file name="hdrhistogram_011.phpt" role="test" />
     <file name="hdrhistogram_012.phpt" role="test" />
+    <file name="hdrhistogram_012_php8.phpt" role="test" />
     <file name="hdrhistogram_013.phpt" role="test" />
     <file name="hdrhistogram_014.phpt" role="test" />
     <file name="hdrhistogram_015.phpt" role="test" />
