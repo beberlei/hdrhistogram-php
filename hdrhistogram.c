@@ -585,7 +585,7 @@ PHP_FUNCTION(hdr_import)
         }
 
         zend_string *key;
-        ulong num_key;
+        zend_ulong num_key;
         int bucket = 0;
         ZEND_HASH_FOREACH_KEY_VAL(Z_ARRVAL_P(value), num_key, key, item) {
             if (!key && bucket < hdr->counts_len) {
@@ -670,7 +670,7 @@ PHP_FUNCTION(hdr_import)
         }
 
         zend_string *key;
-        ulong num_key;
+        zend_ulong num_key;
         ZEND_HASH_FOREACH_KEY_VAL(Z_ARRVAL_P(value), num_key, key, item) {
             if (!key) {
                 if (num_key < hdr->counts_len) {
