@@ -3,8 +3,12 @@
 #endif
 
 #include "php.h"
+#include "ext/standard/info.h"
 #include "hdr/hdr_histogram.h"
 #include "hdr/hdr_histogram_log.h"
+#ifdef HAVE_HDRHISTOGRAM_0_11_7
+#include "hdr/hdr_histogram_version.h"
+#endif
 #include "php_hdrhistogram.h"
 
 #if PHP_VERSION_ID < 80000
@@ -112,6 +116,13 @@ PHP_RSHUTDOWN_FUNCTION(hdrhistogram)
 
 PHP_MINFO_FUNCTION(hdrhistogram)
 {
+	php_info_print_table_start();
+
+	php_info_print_table_row(2, "hdrhistogram", "enabled");
+	php_info_print_table_row(2, "Extension version", HDR_VERSION);
+#ifdef HDR_HISTOGRAM_VERSION
+	php_info_print_table_row(2, "Library version", HDR_HISTOGRAM_VERSION);
+#endif
 }
 
 PHP_FUNCTION(hdr_init)
