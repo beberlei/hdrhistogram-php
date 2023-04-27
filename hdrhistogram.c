@@ -67,7 +67,7 @@ zend_module_entry hdrhistogram_module_entry = {
     PHP_RINIT(hdrhistogram),               /* Request init callback */
     PHP_RSHUTDOWN(hdrhistogram),           /* Request shutdown callback */
     PHP_MINFO(hdrhistogram),               /* Module info callback */
-    HDR_VERSION,
+    PHP_HDR_HISTOGRAM_VERSION,
     STANDARD_MODULE_PROPERTIES
 };
 
@@ -118,8 +118,8 @@ PHP_MINFO_FUNCTION(hdrhistogram)
 {
 	php_info_print_table_start();
 
-	php_info_print_table_row(2, "hdrhistogram", "enabled");
-	php_info_print_table_row(2, "Extension version", HDR_VERSION);
+	php_info_print_table_row(2, "hdrhistogram support", "enabled");
+	php_info_print_table_row(2, "Extension version", PHP_HDR_HISTOGRAM_VERSION);
 #ifdef HDR_HISTOGRAM_VERSION
 	php_info_print_table_row(2, "Library version", HDR_HISTOGRAM_VERSION);
 #endif
