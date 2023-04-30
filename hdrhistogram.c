@@ -3,8 +3,12 @@
 #endif
 
 #include "php.h"
+#include "ext/standard/info.h"
 #include "hdr/hdr_histogram.h"
 #include "hdr/hdr_histogram_log.h"
+#ifdef HAVE_HDRHISTOGRAM_0_11_7
+#include "hdr/hdr_histogram_version.h"
+#endif
 #include "php_hdrhistogram.h"
 
 #if PHP_VERSION_ID < 80000
@@ -63,7 +67,7 @@ zend_module_entry hdrhistogram_module_entry = {
     PHP_RINIT(hdrhistogram),               /* Request init callback */
     PHP_RSHUTDOWN(hdrhistogram),           /* Request shutdown callback */
     PHP_MINFO(hdrhistogram),               /* Module info callback */
-    HDR_VERSION,
+    PHP_HDR_HISTOGRAM_VERSION,
     STANDARD_MODULE_PROPERTIES
 };
 
@@ -112,22 +116,29 @@ PHP_RSHUTDOWN_FUNCTION(hdrhistogram)
 
 PHP_MINFO_FUNCTION(hdrhistogram)
 {
+	php_info_print_table_start();
+
+	php_info_print_table_row(2, "hdrhistogram support", "enabled");
+	php_info_print_table_row(2, "Extension version", PHP_HDR_HISTOGRAM_VERSION);
+#ifdef HDR_HISTOGRAM_VERSION
+	php_info_print_table_row(2, "Library version", HDR_HISTOGRAM_VERSION);
+#endif
 }
 
 PHP_FUNCTION(hdr_init)
 {
     struct hdr_histogram *hdr;
-    long lowest_trackable_value, highest_trackable_value, significant_figures;
+    long lowest_discernible_value, highest_trackable_value, significant_figures;
     int res;
 
     if (zend_parse_parameters(ZEND_NUM_ARGS(), "lll",
-                &lowest_trackable_value, &highest_trackable_value, &significant_figures) == FAILURE) {
+                &lowest_discernible_value, &highest_trackable_value, &significant_figures) == FAILURE) {
         php_error_docref(NULL, E_WARNING, "Invalid arguments passed.");
 
         RETURN_FALSE;
     }
 
-    res = hdr_init(lowest_trackable_value, highest_trackable_value, significant_figures, &hdr);
+    res = hdr_init(lowest_discernible_value, highest_trackable_value, significant_figures, &hdr);
 
     if (res == 0) {
         hdr_register_hdr_resource(return_value, hdr);
@@ -342,8 +353,11 @@ PHP_FUNCTION(hdr_add)
     hdra = hdr_fetch_resource(a, return_value);
     hdrb = hdr_fetch_resource(b, return_value);
 
+#ifdef HAVE_HDRHISTOGRAM_0_11_4
+    res = hdr_init(hdra->lowest_discernible_value, hdra->highest_trackable_value, hdra->significant_figures, &hdr_new);
+#else
     res = hdr_init(hdra->lowest_trackable_value, hdra->highest_trackable_value, hdra->significant_figures, &hdr_new);
-
+#endif
     hdr_add(hdr_new, hdra);
     hdr_add(hdr_new, hdrb);
 
@@ -477,9 +491,16 @@ PHP_FUNCTION(hdr_export)
 
     array_init(return_value);
 
+
+#ifdef HAVE_HDRHISTOGRAM_0_11_4
+    if (hdr->lowest_discernible_value > 1) {
+        add_assoc_long(return_value, "ltv", hdr->lowest_discernible_value);
+    }
+#else
     if (hdr->lowest_trackable_value > 1) {
         add_assoc_long(return_value, "ltv", hdr->lowest_trackable_value);
     }
+#endif
     if (hdr->highest_trackable_value != 60000) {
         add_assoc_long(return_value, "htv", hdr->highest_trackable_value);
     }
@@ -513,7 +534,7 @@ PHP_FUNCTION(hdr_import)
 {
     struct hdr_histogram *hdr;
     zval *import, *value, *item;
-    long lowest_trackable_value, highest_trackable_value, significant_figures;
+    long lowest_discernible_value, highest_trackable_value, significant_figures;
     int res, count;
     zend_ulong i, bucket, skipped;
 
@@ -522,12 +543,12 @@ PHP_FUNCTION(hdr_import)
     }
 
     if (value = hdr_hash_find(Z_ARRVAL_P(import), "ltv", 4)) {
-        lowest_trackable_value = Z_LVAL_P(value);
+        lowest_discernible_value = Z_LVAL_P(value);
     } else {
-        lowest_trackable_value = 1;
+        lowest_discernible_value = 1;
     }
 
-    if (lowest_trackable_value <= 0) {
+    if (lowest_discernible_value <= 0) {
         php_error_docref(NULL, E_WARNING, "lowest_trackable_value (ltv) must be >= 1.");
         RETURN_FALSE;
     }
@@ -560,7 +581,7 @@ PHP_FUNCTION(hdr_import)
         skipped = 0;
     }
 
-    if (skipped < 0 || lowest_trackable_value < 1 || highest_trackable_value < lowest_trackable_value || significant_figures < 1) {
+    if (skipped < 0 || lowest_discernible_value < 1 || highest_trackable_value < lowest_discernible_value || significant_figures < 1) {
         php_error_docref(NULL, E_WARNING, "Invalid values for ltv, htv, sf or sk keys given.");
         RETURN_FALSE;
     }
@@ -570,7 +591,7 @@ PHP_FUNCTION(hdr_import)
     // version 3 format
     if (value != NULL && Z_TYPE_P(value) == IS_ARRAY) {
         count = zend_hash_num_elements(Z_ARRVAL_P(value));
-        res = hdr_init(lowest_trackable_value, highest_trackable_value, significant_figures, &hdr);
+        res = hdr_init(lowest_discernible_value, highest_trackable_value, significant_figures, &hdr);
 
         if (res == 0) {
             hdr_register_hdr_resource(return_value, hdr);
@@ -612,7 +633,7 @@ PHP_FUNCTION(hdr_import)
     if (value != NULL && Z_TYPE_P(value) == IS_ARRAY) {
         count = zend_hash_num_elements(Z_ARRVAL_P(value));
 
-        res = hdr_init(lowest_trackable_value, highest_trackable_value, significant_figures, &hdr);
+        res = hdr_init(lowest_discernible_value, highest_trackable_value, significant_figures, &hdr);
 
         if (res == 0) {
             hdr_register_hdr_resource(return_value, hdr);
@@ -655,7 +676,7 @@ PHP_FUNCTION(hdr_import)
 
     // version 2 format
     if (value != NULL && Z_TYPE_P(value) == IS_ARRAY) {
-        res = hdr_init(lowest_trackable_value, highest_trackable_value, significant_figures, &hdr);
+        res = hdr_init(lowest_discernible_value, highest_trackable_value, significant_figures, &hdr);
 
         if (res == 0) {
             hdr_register_hdr_resource(return_value, hdr);
