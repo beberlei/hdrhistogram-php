@@ -77,7 +77,7 @@ ZEND_GET_MODULE(hdrhistogram)
 
 static void php_hdrhistogram_iterator_descriptor_dtor(zend_resource *rsrc)
 {
-    free(rsrc->ptr);
+    efree(rsrc->ptr);
 }
 
 static void php_hdrhistogram_descriptor_dtor(zend_resource *rsrc)
@@ -406,7 +406,7 @@ PHP_FUNCTION(hdr_iter_init)
 
     hdr = hdr_fetch_resource(zhdr, return_value);
 
-    iterator = malloc(sizeof(struct hdr_iter));
+    iterator = emalloc(sizeof(struct hdr_iter));
     hdr_iter_init(iterator, hdr);
 
     hdr_register_iter_resource(return_value, iterator);
@@ -425,7 +425,7 @@ PHP_FUNCTION(hdr_percentile_iter_init)
 
     hdr = hdr_fetch_resource(zhdr, return_value);
 
-    iterator = malloc(sizeof(struct hdr_iter));
+    iterator = emalloc(sizeof(struct hdr_iter));
     hdr_iter_percentile_init(iterator, hdr, ticks_per_half_distance);
 
     hdr_register_iter_resource(return_value, iterator);
