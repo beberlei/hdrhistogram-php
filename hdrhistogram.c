@@ -730,7 +730,8 @@ PHP_FUNCTION(hdr_base64_encode)
         RETURN_FALSE;
     }
 
-    RETURN_STRING(result);
+    RETVAL_STRING(result);
+    free(result);
 }
 
 PHP_FUNCTION(hdr_base64_decode)
