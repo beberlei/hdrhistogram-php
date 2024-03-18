@@ -75,9 +75,14 @@ zend_module_entry hdrhistogram_module_entry = {
 ZEND_GET_MODULE(hdrhistogram)
 #endif
 
-static void php_hdrhistogram_descriptor_dtor(zend_resource *rsrc)
+static void php_hdrhistogram_iterator_descriptor_dtor(zend_resource *rsrc)
 {
     free(rsrc->ptr);
+}
+
+static void php_hdrhistogram_descriptor_dtor(zend_resource *rsrc)
+{
+    hdr_close(rsrc->ptr);
 }
 
 PHP_MINIT_FUNCTION(hdrhistogram)
@@ -90,7 +95,7 @@ PHP_MINIT_FUNCTION(hdrhistogram)
     );
 
     le_hdrhistogram_iter_descriptor = zend_register_list_destructors_ex(
-        php_hdrhistogram_descriptor_dtor,
+        php_hdrhistogram_iterator_descriptor_dtor,
         NULL,
         "hdr_iterator",
         module_number
