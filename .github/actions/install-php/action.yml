@@ -1,0 +1,101 @@
+name: Install PHP
+inputs:
+  version:
+    required: true
+  type:
+    required: true
+  zts:
+    required: true
+outputs:
+  version:
+    value: ${{ steps.determine-php-version.outputs.version }}
+runs:
+  using: composite
+  steps:
+    - name: apt update
+      shell: bash
+      run: sudo apt-get update
+
+    - name: Determine PHP version
+      id: determine-php-version
+      shell: bash
+      run: |
+        set -ex
+        if ! command -v jq > /dev/null; then
+          sudo apt-get install -y jq
+        fi
+        curl -fsSL "https://www.php.net/releases/index.php?json&max=1&version=${{ inputs.version }}" -o version.json
+        echo version="$(cat version.json |jq -r 'keys[0]')" >> $GITHUB_OUTPUT
+        echo archive="$(cat version.json |jq -r '.[] .source[] |select(.filename |endswith(".gz")) |"https://www.php.net/distributions/" + .filename')" >> $GITHUB_OUTPUT
+
+    - name: Cache PHP
+      id: cache-php
+      uses: actions/cache@v4
+      with:
+        path: php/target/
+        key: php-${{ inputs.type == 'sanitize' && 'sanitizers' || (inputs.type == 'debug' && 'debug' || 'release') }}-${{ inputs.zts == 'zts' && 'zts' || 'nts' }}-${{ runner.arch }}-${{ steps.determine-php-version.outputs.version }}
+
+    - if: steps.cache-php.outputs.cache-hit != 'true'
+      shell: bash
+      run: mkdir php/
+
+    - if: steps.cache-php.outputs.cache-hit != 'true'
+      shell: bash
+      run: sudo apt-get remove --purge --autoremove 'php*-*' 'libmemcached*'
+
+    - if: steps.cache-php.outputs.cache-hit != 'true'
+      shell: bash
+      run: curl -fsSL "${{ steps.determine-php-version.outputs.archive }}" |tar xz -C php --strip-components=1
+    
+    - if: steps.cache-php.outputs.cache-hit != 'true'
+      shell: bash
+      run: |
+        sudo apt-get install -y \
+          libcurl4-openssl-dev \
+          libmcrypt-dev \
+          libmemcached-dev \
+          libonig-dev \
+          librabbitmq-dev \
+          librdkafka-dev \
+          libsqlite3-dev \
+          libssl-dev \
+          libxml2-dev \
+          zlib1g-dev
+
+    - if: steps.cache-php.outputs.cache-hit != 'true'
+      shell: bash
+      working-directory: ./php/
+      run: |
+        if dpkg --compare-versions "${{ steps.determine-php-version.outputs.version }}" ge 8.0.0; then
+          zts='--enable-zts'
+        else
+          zts='--enable-maintainer-zts'
+        fi
+
+        ./configure \
+          --enable-option-checking=fatal \
+          --prefix=$(pwd)/target/ \
+          --with-pear \
+          ${{ (inputs.type == 'debug' || inputs.type == 'sanitize') && '--enable-debug' || '' }} \
+          ${{ inputs.type == 'sanitize' && 'CFLAGS="-fsanitize=undefined,address -DZEND_TRACK_ARENA_ALLOC" LDFLAGS="-fsanitize=undefined,address" CC=clang-16 CXX=clang++-16' || '' }} \
+          ${{ inputs.zts == 'zts' && '$zts' || '' }} \
+          --enable-fpm \
+          --enable-soap \
+          --enable-mbstring \
+          --with-curl \
+          --with-mysqli \
+          --with-openssl \
+          --with-pdo-mysql \
+          --with-zlib
+
+    - if: steps.cache-php.outputs.cache-hit != 'true'
+      shell: bash
+      working-directory: ./php/
+      run: |
+        make -j$(getconf _NPROCESSORS_ONLN)
+
+    - if: steps.cache-php.outputs.cache-hit != 'true'
+      shell: bash
+      working-directory: ./php/
+      run: |
+        make install
