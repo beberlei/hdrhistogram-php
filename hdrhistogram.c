@@ -22,8 +22,6 @@
 static int le_hdrhistogram_descriptor;
 static int le_hdrhistogram_iter_descriptor;
 
-#define strsize_t size_t
-
 static zend_always_inline void hdr_register_hdr_resource(zval *return_value, struct hdr_histogram* hdr)
 {
     ZVAL_RES(return_value, zend_register_resource(hdr, le_hdrhistogram_descriptor));
@@ -48,7 +46,7 @@ static zend_always_inline struct hdr_iter* hdr_fetch_iterator(zval *res, zval *r
     return (struct hdr_iter*)zend_fetch_resource(Z_RES_P(res), "hdr_iterator", le_hdrhistogram_iter_descriptor);
 }
 
-static zend_always_inline zval* hdr_hash_find(HashTable *arr, const char *name, strsize_t len)
+static zend_always_inline zval* hdr_hash_find(HashTable *arr, const char *name, size_t len)
 {
     return zend_hash_str_find(arr, name, len - 1);
 }
