@@ -737,14 +737,13 @@ PHP_FUNCTION(hdr_base64_encode)
 PHP_FUNCTION(hdr_base64_decode)
 {
     struct hdr_histogram *hdr = NULL;
-    char *data = NULL;
-    strsize_t data_len;
+    zend_string *data;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS(), "s", &data, &data_len) == FAILURE) {
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "S", &data) == FAILURE) {
         RETURN_FALSE;
     }
 
-    if (hdr_log_decode(&hdr, data, data_len) != 0) {
+    if (hdr_log_decode(&hdr, ZSTR_VAL(data), ZSTR_LEN(data)) != 0) {
         php_error_docref(NULL, E_WARNING, "Cannot decode histogram");
 
         RETURN_FALSE;
