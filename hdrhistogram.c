@@ -547,7 +547,7 @@ PHP_FUNCTION(hdr_import)
         RETURN_FALSE;
     }
 
-    if (value = hdr_hash_find(Z_ARRVAL_P(import), "ltv", 4)) {
+    if ((value = hdr_hash_find(Z_ARRVAL_P(import), "ltv", 4)) != NULL) {
         lowest_discernible_value = Z_LVAL_P(value);
     } else {
         lowest_discernible_value = 1;
@@ -558,7 +558,7 @@ PHP_FUNCTION(hdr_import)
         RETURN_FALSE;
     }
 
-    if (value = hdr_hash_find(Z_ARRVAL_P(import), "htv", 4)) {
+    if ((value = hdr_hash_find(Z_ARRVAL_P(import), "htv", 4)) != NULL) {
         highest_trackable_value = Z_LVAL_P(value);
     } else {
         highest_trackable_value = 60000;
@@ -569,7 +569,7 @@ PHP_FUNCTION(hdr_import)
         RETURN_FALSE;
     }
 
-    if (value = hdr_hash_find(Z_ARRVAL_P(import), "sf", 3)) {
+    if ((value = hdr_hash_find(Z_ARRVAL_P(import), "sf", 3)) != NULL) {
         significant_figures = Z_LVAL_P(value);
     } else {
         significant_figures = 2;
@@ -580,7 +580,7 @@ PHP_FUNCTION(hdr_import)
         RETURN_FALSE;
     }
 
-    if (value = hdr_hash_find(Z_ARRVAL_P(import), "sk", 3)) {
+    if ((value = hdr_hash_find(Z_ARRVAL_P(import), "sk", 3)) != NULL) {
         skipped = Z_LVAL_P(value);
     } else {
         skipped = 0;
@@ -659,7 +659,7 @@ PHP_FUNCTION(hdr_import)
         }
 
         for (i = 0; i < count; i++) {
-            if (item = hdr_hash_index_find(Z_ARRVAL_P(value), i)) {
+            if ((item = hdr_hash_index_find(Z_ARRVAL_P(value), i)) != NULL) {
                 bucket = i + skipped;
                 if (bucket < hdr->counts_len) {
                     convert_to_long_ex(item);
