@@ -53,11 +53,6 @@ static zend_always_inline zval* hdr_hash_find(HashTable *arr, const char *name, 
     return zend_hash_str_find(arr, name, len - 1);
 }
 
-static zend_always_inline zval* hdr_hash_index_find(HashTable *arr, zend_ulong h)
-{
-    return zend_hash_index_find(arr, h);
-}
-
 zend_module_entry hdrhistogram_module_entry = {
     STANDARD_MODULE_HEADER,
     "hdrhistogram",
@@ -659,7 +654,7 @@ PHP_FUNCTION(hdr_import)
         }
 
         for (i = 0; i < count; i++) {
-            if ((item = hdr_hash_index_find(Z_ARRVAL_P(value), i)) != NULL) {
+            if ((item = zend_hash_index_find(Z_ARRVAL_P(value), i)) != NULL) {
                 bucket = i + skipped;
                 if (bucket < hdr->counts_len) {
                     convert_to_long_ex(item);
