@@ -46,11 +46,6 @@ static zend_always_inline struct hdr_iter* hdr_fetch_iterator(zval *res, zval *r
     return (struct hdr_iter*)zend_fetch_resource(Z_RES_P(res), "hdr_iterator", le_hdrhistogram_iter_descriptor);
 }
 
-static zend_always_inline zval* hdr_hash_find(HashTable *arr, const char *name, size_t len)
-{
-    return zend_hash_str_find(arr, name, len - 1);
-}
-
 zend_module_entry hdrhistogram_module_entry = {
     STANDARD_MODULE_HEADER,
     "hdrhistogram",
@@ -540,7 +535,7 @@ PHP_FUNCTION(hdr_import)
         RETURN_FALSE;
     }
 
-    if ((value = hdr_hash_find(Z_ARRVAL_P(import), "ltv", 4)) != NULL) {
+    if ((value = zend_hash_str_find(Z_ARRVAL_P(import), "ltv", strlen("ltv"))) != NULL) {
         lowest_discernible_value = Z_LVAL_P(value);
     } else {
         lowest_discernible_value = 1;
@@ -551,7 +546,7 @@ PHP_FUNCTION(hdr_import)
         RETURN_FALSE;
     }
 
-    if ((value = hdr_hash_find(Z_ARRVAL_P(import), "htv", 4)) != NULL) {
+    if ((value = zend_hash_str_find(Z_ARRVAL_P(import), "htv", strlen("htv"))) != NULL) {
         highest_trackable_value = Z_LVAL_P(value);
     } else {
         highest_trackable_value = 60000;
@@ -562,7 +557,7 @@ PHP_FUNCTION(hdr_import)
         RETURN_FALSE;
     }
 
-    if ((value = hdr_hash_find(Z_ARRVAL_P(import), "sf", 3)) != NULL) {
+    if ((value = zend_hash_str_find(Z_ARRVAL_P(import), "sf", strlen("sf"))) != NULL) {
         significant_figures = Z_LVAL_P(value);
     } else {
         significant_figures = 2;
@@ -573,7 +568,7 @@ PHP_FUNCTION(hdr_import)
         RETURN_FALSE;
     }
 
-    if ((value = hdr_hash_find(Z_ARRVAL_P(import), "sk", 3)) != NULL) {
+    if ((value = zend_hash_str_find(Z_ARRVAL_P(import), "sk", strlen("sk"))) != NULL) {
         skipped = Z_LVAL_P(value);
     } else {
         skipped = 0;
@@ -584,7 +579,7 @@ PHP_FUNCTION(hdr_import)
         RETURN_FALSE;
     }
 
-    value = hdr_hash_find(Z_ARRVAL_P(import), "v", 2);
+    value = zend_hash_str_find(Z_ARRVAL_P(import), "v", strlen("v"));
 
     // version 3 format
     if (value != NULL && Z_TYPE_P(value) == IS_ARRAY) {
@@ -625,7 +620,7 @@ PHP_FUNCTION(hdr_import)
         return;
     }
 
-    value = hdr_hash_find(Z_ARRVAL_P(import), "c", 2);
+    value = zend_hash_str_find(Z_ARRVAL_P(import), "c", strlen("c"));
 
     // version 1 format
     if (value != NULL && Z_TYPE_P(value) == IS_ARRAY) {
@@ -670,7 +665,7 @@ PHP_FUNCTION(hdr_import)
         return;
     }
 
-    value = hdr_hash_find(Z_ARRVAL_P(import), "b", 2);
+    value = zend_hash_str_find(Z_ARRVAL_P(import), "b", strlen("b"));
 
     // version 2 format
     if (value != NULL && Z_TYPE_P(value) == IS_ARRAY) {
