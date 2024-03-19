@@ -1,0 +1,18 @@
+name: Install HdrHistogram_c
+inputs:
+  type:
+    required: true
+runs:
+  using: composite
+  steps:
+    - uses: actions/checkout@v4
+      with:
+        repository: HdrHistogram/HdrHistogram_c
+        path: HdrHistogram_c
+
+    - shell: bash
+      working-directory: ./HdrHistogram_c/
+      run: |
+        env ${{ inputs.type == 'sanitize' && 'CFLAGS="-g -O0 -fsanitize=undefined,address -DZEND_TRACK_ARENA_ALLOC" LDFLAGS="-fsanitize=undefined,address" CC=clang-16 CXX=clang++-16' || 'CFLAGS="-g -O0"' }} cmake .
+        make VERBOSE=1
+        sudo make install

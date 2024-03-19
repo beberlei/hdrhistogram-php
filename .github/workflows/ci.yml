@@ -1,0 +1,147 @@
+name: Tests
+
+on: push
+
+permissions:
+  contents: read
+
+jobs:
+  Linux:
+    name: "${{ matrix.phpVersion }}, ${{ matrix.debug == 'sanitize' && 'Sanitizers' || (matrix.debug && 'Debug' || 'Release') }}, ${{ matrix.zts && 'ZTS' || 'NTS' }}, ${{ matrix.os }}"
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - phpVersion: "8.3"
+            os: ubuntu-22.04
+            debug: true
+            zts: false
+          - phpVersion: "8.3"
+            os: ubuntu-22.04
+            debug: sanitize
+            zts: false
+          - phpVersion: "8.3"
+            os: ubuntu-22.04
+            debug: true
+            zts: true
+          - phpVersion: "8.2"
+            os: ubuntu-22.04
+            debug: true
+            zts: false
+          - phpVersion: "8.1"
+            os: ubuntu-22.04
+            debug: true
+            zts: false
+          - phpVersion: "8.0"
+            os: ubuntu-20.04
+            debug: true
+            zts: false
+          - phpVersion: "7.4"
+            os: ubuntu-20.04
+            debug: true
+            zts: false
+          - phpVersion: "7.3"
+            os: ubuntu-20.04
+            debug: true
+            zts: false
+          - phpVersion: "7.2"
+            os: ubuntu-20.04
+            debug: true
+            zts: false
+          - phpVersion: "7.1"
+            os: ubuntu-20.04
+            debug: true
+            zts: false
+          - phpVersion: "7.0"
+            os: ubuntu-20.04
+            debug: true
+            zts: false
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Reduce ASLR entropy (ASAN)
+      if: ${{ matrix.debug == 'sanitize' }}
+      # https://github.com/actions/runner-images/issues/9491
+      run: sudo sysctl vm.mmap_rnd_bits=28
+
+    - name: LLVM 16 (ASAN)
+      if: ${{ matrix.debug == 'sanitize' }}
+      run: |
+        wget https://apt.llvm.org/llvm.sh
+        chmod u+x llvm.sh
+        sudo ./llvm.sh 16
+
+    - name: Install PHP
+      id: install-php
+      uses: ./.github/actions/install-php
+      timeout-minutes: 20
+      with:
+        version: ${{ matrix.phpVersion }}
+        # https://github.com/actions/runner/issues/2238
+        type: ${{ matrix.debug == 'sanitize' && 'sanitize' || (matrix.debug && 'debug' || 'release') }}
+        zts: ${{ matrix.zts && 'zts' || 'nts' }}
+
+    - name: Install HdrHistogram_c
+      uses: ./.github/actions/install-hdrhistogram-c
+      with:
+        type: ${{ matrix.debug == 'sanitize' && 'sanitize' || (matrix.debug && 'debug' || 'release') }}
+
+    - name: Add our PHP to the PATH
+      run: |
+        echo "$(pwd)/php/target/bin" >> $GITHUB_PATH
+
+    - name: Show PHP Information
+      run: |
+        set -ex
+
+        which php
+        php -v
+        if ! php -v |grep -q "${{ steps.install-php.outputs.version }}"; then
+          echo "ERROR: Wrong PHP version"
+          exit 1
+        fi
+        php -i
+
+    - run: phpize
+
+    - name: configure
+      timeout-minutes: 1
+      run: |
+        ./configure \
+          ${{ matrix.debug == 'sanitize' && 'CFLAGS="-g -fsanitize=undefined,address -DZEND_TRACK_ARENA_ALLOC" LDFLAGS="-fsanitize=undefined,address" CC=clang-16 CXX=clang++-16' || 'CFLAGS="-g"' }}
+
+    - name: make
+      timeout-minutes: 1
+      run: |
+        set -ex
+
+        make -j$(getconf _NPROCESSORS_ONLN)
+
+    - name: "Show hdrhistogram Version"
+      id: hdrhistogram-version
+      run: |
+        set -ex
+
+        echo "version=$(php -dextension=.libs/hdrhistogram.so -r "echo phpversion('hdrhistogram');")" >> $GITHUB_OUTPUT
+
+    - name: run-tests.php for hdrhistogram ${{ steps.hdrhistogram-version.outputs.version }}
+      timeout-minutes: 5
+      run: |
+        set -ex
+
+        export TEST_PHP_EXECUTABLE="$(pwd)/php/target/bin/php"
+        export TEST_PHP_CGI_EXECUTABLE="$(pwd)/php/target/bin/php-cgi"
+        noProgress="$(php run-tests.php -h |grep -o -m1 -- '--no-progress' || true)"
+        if php run-tests.php -h |grep -q -- '--show-slow'; then
+            showSlow="--show-slow 500"
+        else
+            showSlow=""
+        fi
+        asan="${{ matrix.debug == 'sanitize' && '--asan' || '' }}"
+
+        php run-tests.php $noProgress $showSlow $asan --show-diff -d extension="$(pwd)/.libs/hdrhistogram.so" -q
+      env:
+        REPORT_EXIT_STATUS: 1
