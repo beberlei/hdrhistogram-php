@@ -75,9 +75,14 @@ zend_module_entry hdrhistogram_module_entry = {
 ZEND_GET_MODULE(hdrhistogram)
 #endif
 
+static void php_hdrhistogram_iterator_descriptor_dtor(zend_resource *rsrc)
+{
+    efree(rsrc->ptr);
+}
+
 static void php_hdrhistogram_descriptor_dtor(zend_resource *rsrc)
 {
-    free(rsrc->ptr);
+    hdr_close(rsrc->ptr);
 }
 
 PHP_MINIT_FUNCTION(hdrhistogram)
@@ -90,7 +95,7 @@ PHP_MINIT_FUNCTION(hdrhistogram)
     );
 
     le_hdrhistogram_iter_descriptor = zend_register_list_destructors_ex(
-        php_hdrhistogram_descriptor_dtor,
+        php_hdrhistogram_iterator_descriptor_dtor,
         NULL,
         "hdr_iterator",
         module_number
@@ -401,7 +406,7 @@ PHP_FUNCTION(hdr_iter_init)
 
     hdr = hdr_fetch_resource(zhdr, return_value);
 
-    iterator = malloc(sizeof(struct hdr_iter));
+    iterator = emalloc(sizeof(struct hdr_iter));
     hdr_iter_init(iterator, hdr);
 
     hdr_register_iter_resource(return_value, iterator);
@@ -420,7 +425,7 @@ PHP_FUNCTION(hdr_percentile_iter_init)
 
     hdr = hdr_fetch_resource(zhdr, return_value);
 
-    iterator = malloc(sizeof(struct hdr_iter));
+    iterator = emalloc(sizeof(struct hdr_iter));
     hdr_iter_percentile_init(iterator, hdr, ticks_per_half_distance);
 
     hdr_register_iter_resource(return_value, iterator);
@@ -730,7 +735,8 @@ PHP_FUNCTION(hdr_base64_encode)
         RETURN_FALSE;
     }
 
-    RETURN_STRING(result);
+    RETVAL_STRING(result);
+    free(result);
 }
 
 PHP_FUNCTION(hdr_base64_decode)
