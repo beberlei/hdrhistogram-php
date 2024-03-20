@@ -22,8 +22,6 @@
 static int le_hdrhistogram_descriptor;
 static int le_hdrhistogram_iter_descriptor;
 
-#define strsize_t size_t
-
 static zend_always_inline void hdr_register_hdr_resource(zval *return_value, struct hdr_histogram* hdr)
 {
     ZVAL_RES(return_value, zend_register_resource(hdr, le_hdrhistogram_descriptor));
@@ -46,16 +44,6 @@ static zend_always_inline struct hdr_iter* hdr_fetch_iterator(zval *res, zval *r
     struct hdr_iter *iterator;
 
     return (struct hdr_iter*)zend_fetch_resource(Z_RES_P(res), "hdr_iterator", le_hdrhistogram_iter_descriptor);
-}
-
-static zend_always_inline zval* hdr_hash_find(HashTable *arr, const char *name, strsize_t len)
-{
-    return zend_hash_str_find(arr, name, len - 1);
-}
-
-static zend_always_inline zval* hdr_hash_index_find(HashTable *arr, zend_ulong h)
-{
-    return zend_hash_index_find(arr, h);
 }
 
 zend_module_entry hdrhistogram_module_entry = {
@@ -547,7 +535,7 @@ PHP_FUNCTION(hdr_import)
         RETURN_FALSE;
     }
 
-    if ((value = hdr_hash_find(Z_ARRVAL_P(import), "ltv", 4)) != NULL) {
+    if ((value = zend_hash_str_find(Z_ARRVAL_P(import), "ltv", strlen("ltv"))) != NULL) {
         lowest_discernible_value = Z_LVAL_P(value);
     } else {
         lowest_discernible_value = 1;
@@ -558,7 +546,7 @@ PHP_FUNCTION(hdr_import)
         RETURN_FALSE;
     }
 
-    if ((value = hdr_hash_find(Z_ARRVAL_P(import), "htv", 4)) != NULL) {
+    if ((value = zend_hash_str_find(Z_ARRVAL_P(import), "htv", strlen("htv"))) != NULL) {
         highest_trackable_value = Z_LVAL_P(value);
     } else {
         highest_trackable_value = 60000;
@@ -569,7 +557,7 @@ PHP_FUNCTION(hdr_import)
         RETURN_FALSE;
     }
 
-    if ((value = hdr_hash_find(Z_ARRVAL_P(import), "sf", 3)) != NULL) {
+    if ((value = zend_hash_str_find(Z_ARRVAL_P(import), "sf", strlen("sf"))) != NULL) {
         significant_figures = Z_LVAL_P(value);
     } else {
         significant_figures = 2;
@@ -580,7 +568,7 @@ PHP_FUNCTION(hdr_import)
         RETURN_FALSE;
     }
 
-    if ((value = hdr_hash_find(Z_ARRVAL_P(import), "sk", 3)) != NULL) {
+    if ((value = zend_hash_str_find(Z_ARRVAL_P(import), "sk", strlen("sk"))) != NULL) {
         skipped = Z_LVAL_P(value);
     } else {
         skipped = 0;
@@ -591,7 +579,7 @@ PHP_FUNCTION(hdr_import)
         RETURN_FALSE;
     }
 
-    value = hdr_hash_find(Z_ARRVAL_P(import), "v", 2);
+    value = zend_hash_str_find(Z_ARRVAL_P(import), "v", strlen("v"));
 
     // version 3 format
     if (value != NULL && Z_TYPE_P(value) == IS_ARRAY) {
@@ -632,7 +620,7 @@ PHP_FUNCTION(hdr_import)
         return;
     }
 
-    value = hdr_hash_find(Z_ARRVAL_P(import), "c", 2);
+    value = zend_hash_str_find(Z_ARRVAL_P(import), "c", strlen("c"));
 
     // version 1 format
     if (value != NULL && Z_TYPE_P(value) == IS_ARRAY) {
@@ -659,7 +647,7 @@ PHP_FUNCTION(hdr_import)
         }
 
         for (i = 0; i < count; i++) {
-            if ((item = hdr_hash_index_find(Z_ARRVAL_P(value), i)) != NULL) {
+            if ((item = zend_hash_index_find(Z_ARRVAL_P(value), i)) != NULL) {
                 bucket = i + skipped;
                 if (bucket < hdr->counts_len) {
                     convert_to_long_ex(item);
@@ -677,7 +665,7 @@ PHP_FUNCTION(hdr_import)
         return;
     }
 
-    value = hdr_hash_find(Z_ARRVAL_P(import), "b", 2);
+    value = zend_hash_str_find(Z_ARRVAL_P(import), "b", strlen("b"));
 
     // version 2 format
     if (value != NULL && Z_TYPE_P(value) == IS_ARRAY) {
@@ -742,14 +730,13 @@ PHP_FUNCTION(hdr_base64_encode)
 PHP_FUNCTION(hdr_base64_decode)
 {
     struct hdr_histogram *hdr = NULL;
-    char *data = NULL;
-    strsize_t data_len;
+    zend_string *data;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS(), "s", &data, &data_len) == FAILURE) {
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "S", &data) == FAILURE) {
         RETURN_FALSE;
     }
 
-    if (hdr_log_decode(&hdr, data, data_len) != 0) {
+    if (hdr_log_decode(&hdr, ZSTR_VAL(data), ZSTR_LEN(data)) != 0) {
         php_error_docref(NULL, E_WARNING, "Cannot decode histogram");
 
         RETURN_FALSE;
