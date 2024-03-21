@@ -3,6 +3,7 @@ hdrhistogram: Base64 Encode/Decode
 --SKIPIF--
 <?php
 if (PHP_VERSION_ID < 80000) die("skip PHP 8 only");
+if (getenv('SKIP_ASAN')) die("xfail https://github.com/HdrHistogram/HdrHistogram_c/issues/123");
 ?>
 --FILE--
 <?php
