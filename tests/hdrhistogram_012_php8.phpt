@@ -21,6 +21,8 @@ $imported = hdr_import(["ltv" => 1, "htv" => 10, "sf" => -2]);
 $imported = hdr_import(["ltv" => 1, "htv" => 10, "sf" => 1, "c" => null]);
 $imported = hdr_import(["ltv" => 1, "htv" => 10, "sf" => 1, "b" => null]);
 $imported = hdr_import(["ltv" => 1, "htv" => 10, "sf" => 1, "b" => null, "c" => null]);
+
+?>
 --EXPECTF--
 Warning: hdr_import(): lowest_trackable_value (ltv) must be >= 1. in %s
 hdr_import() expects exactly 1 argument, 0 given

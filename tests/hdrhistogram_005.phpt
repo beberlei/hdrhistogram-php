@@ -13,6 +13,8 @@ $c = hdr_add($a, $b);
 echo "count(a): " . hdr_count_at_value($a, 1) . "\n";
 echo "count(b): " . hdr_count_at_value($b, 1) . "\n";
 echo "count(a+b): " . hdr_count_at_value($c, 1) . "\n";
+
+?>
 --EXPECT--
 count(a): 10
 count(b): 20

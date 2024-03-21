@@ -33,6 +33,7 @@ while ($data = hdr_iter_next($iter)) {
     }
 }
 
+?>
 --EXPECTF--
 array(2) {
   ["htv"]=>

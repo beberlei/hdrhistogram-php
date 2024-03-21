@@ -12,6 +12,8 @@ hdr_record_values($b, 1, 20);
 $dropped = hdr_merge_into($a, $b);
 echo "dropped: " . $dropped . "\n";
 echo "count(a+b): " . hdr_count_at_value($a, 1) . "\n";
+
+?>
 --EXPECT--
 dropped: 0
 count(a+b): 30
