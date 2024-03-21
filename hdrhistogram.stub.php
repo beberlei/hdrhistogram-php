@@ -77,6 +77,6 @@ namespace HdrHistogram\Iterator {
      * @not-serializable
      */
     final class Percentile {
-        public function __construct(\HdrHistogram\Histogram $histogram) { }
+        public function __construct(\HdrHistogram\Histogram $histogram, int $ticks_per_half_distance) { }
     }
 }
