@@ -109,12 +109,12 @@ PHP_RSHUTDOWN_FUNCTION(hdrhistogram)
 
 PHP_MINFO_FUNCTION(hdrhistogram)
 {
-	php_info_print_table_start();
+    php_info_print_table_start();
 
-	php_info_print_table_row(2, "hdrhistogram support", "enabled");
-	php_info_print_table_row(2, "Extension version", PHP_HDR_HISTOGRAM_VERSION);
+    php_info_print_table_row(2, "hdrhistogram support", "enabled");
+    php_info_print_table_row(2, "Extension version", PHP_HDR_HISTOGRAM_VERSION);
 #ifdef HDR_HISTOGRAM_VERSION
-	php_info_print_table_row(2, "Library version", HDR_HISTOGRAM_VERSION);
+    php_info_print_table_row(2, "Library version", HDR_HISTOGRAM_VERSION);
 #endif
 }
 
