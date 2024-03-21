@@ -4,6 +4,8 @@
 
 #include "php.h"
 #include "ext/standard/info.h"
+#include "Zend/zend_exceptions.h"
+#include "Zend/zend_interfaces.h"
 #include "hdr/hdr_histogram.h"
 #include "hdr/hdr_histogram_log.h"
 #ifdef HAVE_HDRHISTOGRAM_0_11_7
@@ -19,32 +21,85 @@
 
 #define PHP_HDRHISTOGRAM_DESCRIPTOR_RES_NAME "hdr_histogram"
 
-static int le_hdrhistogram_descriptor;
-static int le_hdrhistogram_iter_descriptor;
+static zend_class_entry *php_HdrHistogram_Histogram_ce;
+static zend_object_handlers php_hdrhistogram_histogram_object_handlers;
 
-static zend_always_inline void hdr_register_hdr_resource(zval *return_value, struct hdr_histogram* hdr)
-{
-    ZVAL_RES(return_value, zend_register_resource(hdr, le_hdrhistogram_descriptor));
+struct php_hdrhistogram_histogram {
+    struct hdr_histogram *histogram;
+    zend_object std;
+};
+
+static inline struct php_hdrhistogram_histogram *php_hdrhistogram_histogram_from_object(zend_object *object) {
+    return (struct php_hdrhistogram_histogram *)((char *)(object) - XtOffsetOf(struct php_hdrhistogram_histogram, std));
 }
 
-static zend_always_inline void hdr_register_iter_resource(zval *return_value, struct hdr_iter* iter)
+static zend_object *php_hdrhistogram_histogram_new(zend_class_entry *ce)
 {
-    ZVAL_RES(return_value, zend_register_resource(iter, le_hdrhistogram_iter_descriptor));
+    struct php_hdrhistogram_histogram *histogram;
+#if PHP_VERSION_ID >= 80000
+    histogram = zend_object_alloc(sizeof(struct php_hdrhistogram_histogram), ce);
+#else
+    histogram = ecalloc(1, sizeof(struct php_hdrhistogram_histogram) + sizeof(zval) * (ce->default_properties_count - 1));
+#endif
+
+    zend_object_std_init(&histogram->std, ce);
+    object_properties_init(&histogram->std, ce);
+    histogram->std.handlers = &php_hdrhistogram_histogram_object_handlers;
+
+    histogram->histogram = NULL;
+
+    return &histogram->std;
 }
 
-static zend_always_inline struct hdr_histogram* hdr_fetch_resource(zval *res, zval *return_value)
+static void php_hdrhistogram_histogram_free(zend_object *object)
 {
-    struct hdr_histogram *hdr;
+    struct php_hdrhistogram_histogram *histogram = php_hdrhistogram_histogram_from_object(object);
 
-    return (struct hdr_histogram*)zend_fetch_resource(Z_RES_P(res), PHP_HDRHISTOGRAM_DESCRIPTOR_RES_NAME, le_hdrhistogram_descriptor);
+    hdr_close(histogram->histogram);
+
+    zend_object_std_dtor(&histogram->std);
 }
 
-static zend_always_inline struct hdr_iter* hdr_fetch_iterator(zval *res, zval *return_value)
-{
+static zend_class_entry *php_HdrHistogram_Iterator_ce;
+static zend_object_handlers php_hdrhistogram_iterator_object_handlers;
+
+struct php_hdrhistogram_iterator {
     struct hdr_iter *iterator;
+    zend_object std;
+};
 
-    return (struct hdr_iter*)zend_fetch_resource(Z_RES_P(res), "hdr_iterator", le_hdrhistogram_iter_descriptor);
+static inline struct php_hdrhistogram_iterator *php_hdrhistogram_iterator_from_object(zend_object *object) {
+    return (struct php_hdrhistogram_iterator *)((char *)(object) - XtOffsetOf(struct php_hdrhistogram_iterator, std));
 }
+
+static zend_object *php_hdrhistogram_iterator_new(zend_class_entry *ce)
+{
+    struct php_hdrhistogram_iterator *iterator;
+#if PHP_VERSION_ID >= 80000
+    iterator = zend_object_alloc(sizeof(struct php_hdrhistogram_iterator), ce);
+#else
+    iterator = ecalloc(1, sizeof(struct php_hdrhistogram_iterator) + sizeof(zval) * (ce->default_properties_count - 1));
+#endif
+
+    zend_object_std_init(&iterator->std, ce);
+    object_properties_init(&iterator->std, ce);
+    iterator->std.handlers = &php_hdrhistogram_iterator_object_handlers;
+
+    iterator->iterator = NULL;
+
+    return &iterator->std;
+}
+
+static void php_hdrhistogram_iterator_free(zend_object *object)
+{
+    struct php_hdrhistogram_iterator *iterator = php_hdrhistogram_iterator_from_object(object);
+
+    efree(iterator->iterator);
+
+    zend_object_std_dtor(&iterator->std);
+}
+
+static zend_class_entry *php_HdrHistogram_Iterator_Percentile_ce;
 
 zend_module_entry hdrhistogram_module_entry = {
     STANDARD_MODULE_HEADER,
@@ -63,31 +118,36 @@ zend_module_entry hdrhistogram_module_entry = {
 ZEND_GET_MODULE(hdrhistogram)
 #endif
 
-static void php_hdrhistogram_iterator_descriptor_dtor(zend_resource *rsrc)
-{
-    efree(rsrc->ptr);
-}
-
-static void php_hdrhistogram_descriptor_dtor(zend_resource *rsrc)
-{
-    hdr_close(rsrc->ptr);
-}
-
 PHP_MINIT_FUNCTION(hdrhistogram)
 {
-    le_hdrhistogram_descriptor = zend_register_list_destructors_ex(
-        php_hdrhistogram_descriptor_dtor,
-        NULL,
-        PHP_HDRHISTOGRAM_DESCRIPTOR_RES_NAME,
-        module_number
-    );
+    php_HdrHistogram_Histogram_ce = register_class_HdrHistogram_Histogram();
+    php_HdrHistogram_Histogram_ce->create_object = php_hdrhistogram_histogram_new;
+    memcpy(&php_hdrhistogram_histogram_object_handlers, zend_get_std_object_handlers(), sizeof(zend_object_handlers));
+    php_hdrhistogram_histogram_object_handlers.offset = XtOffsetOf(struct php_hdrhistogram_histogram, std);
+    php_hdrhistogram_histogram_object_handlers.free_obj = php_hdrhistogram_histogram_free;
+    php_hdrhistogram_histogram_object_handlers.clone_obj = NULL;
+#if PHP_VERSION_ID < 80100
+    php_HdrHistogram_Histogram_ce->serialize    = zend_class_serialize_deny;
+    php_HdrHistogram_Histogram_ce->unserialize  = zend_class_unserialize_deny;
+#endif
 
-    le_hdrhistogram_iter_descriptor = zend_register_list_destructors_ex(
-        php_hdrhistogram_iterator_descriptor_dtor,
-        NULL,
-        "hdr_iterator",
-        module_number
-    );
+    php_HdrHistogram_Iterator_ce = register_class_HdrHistogram_Iterator();
+    php_HdrHistogram_Iterator_ce->create_object = php_hdrhistogram_iterator_new;
+    memcpy(&php_hdrhistogram_iterator_object_handlers, zend_get_std_object_handlers(), sizeof(zend_object_handlers));
+    php_hdrhistogram_iterator_object_handlers.offset = XtOffsetOf(struct php_hdrhistogram_iterator, std);
+    php_hdrhistogram_iterator_object_handlers.free_obj = php_hdrhistogram_iterator_free;
+    php_hdrhistogram_iterator_object_handlers.clone_obj = NULL;
+#if PHP_VERSION_ID < 80100
+    php_HdrHistogram_Iterator_ce->serialize    = zend_class_serialize_deny;
+    php_HdrHistogram_Iterator_ce->unserialize  = zend_class_unserialize_deny;
+#endif
+
+    php_HdrHistogram_Iterator_Percentile_ce = register_class_HdrHistogram_Iterator_Percentile();
+    php_HdrHistogram_Iterator_Percentile_ce->create_object = php_hdrhistogram_iterator_new;
+#if PHP_VERSION_ID < 80100
+    php_HdrHistogram_Iterator_Percentile_ce->serialize    = zend_class_serialize_deny;
+    php_HdrHistogram_Iterator_Percentile_ce->unserialize  = zend_class_unserialize_deny;
+#endif
 
     return SUCCESS;
 }
@@ -118,6 +178,82 @@ PHP_MINFO_FUNCTION(hdrhistogram)
 #endif
 }
 
+ZEND_METHOD(HdrHistogram_Histogram, __construct)
+{
+    zend_long lowest_discernible_value, highest_trackable_value, significant_figures;
+
+    ZEND_PARSE_PARAMETERS_START(3, 3)
+        Z_PARAM_LONG(lowest_discernible_value);
+        Z_PARAM_LONG(highest_trackable_value);
+        Z_PARAM_LONG(significant_figures);
+    ZEND_PARSE_PARAMETERS_END();
+
+    if (lowest_discernible_value < 1) {
+#if PHP_VERSION_ID >= 80000
+        zend_argument_value_error(1, "must be greater than or equal to 1");
+#else
+        zend_throw_exception_ex(NULL, 0, "%s(): Argument #%d ($%s) must be greater than or equal to 1", "HdrHistogram\\Histogram::__construct", 1, "lowest_trackable_value");
+#endif
+        return;
+    }
+
+    struct php_hdrhistogram_histogram *h = php_hdrhistogram_histogram_from_object(Z_OBJ_P(getThis()));
+
+    struct hdr_histogram *hdr;
+    int res;
+
+    res = hdr_init(lowest_discernible_value, highest_trackable_value, significant_figures, &hdr);
+
+    if (res != 0) {
+        zend_throw_error(zend_ce_error, "Unable to initialize HdrHistogram.");
+        return;
+    }
+
+    h->histogram = hdr;
+}
+
+ZEND_METHOD(HdrHistogram_Iterator, __construct)
+{
+    struct hdr_iter *iterator;
+    struct hdr_histogram *hdr;
+    zval *zhdr;
+
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+        Z_PARAM_OBJECT_OF_CLASS(zhdr, php_HdrHistogram_Histogram_ce);
+    ZEND_PARSE_PARAMETERS_END();
+
+    hdr = php_hdrhistogram_histogram_from_object(Z_OBJ_P(zhdr))->histogram;
+
+    iterator = emalloc(sizeof(struct hdr_iter));
+    hdr_iter_init(iterator, hdr);
+
+    object_init_ex(return_value, php_HdrHistogram_Iterator_ce);
+    struct php_hdrhistogram_iterator *i = php_hdrhistogram_iterator_from_object(Z_OBJ_P(getThis()));
+    i->iterator = iterator;
+}
+
+ZEND_METHOD(HdrHistogram_Iterator_Percentile, __construct)
+{
+    struct hdr_iter *iterator;
+    struct hdr_histogram *hdr;
+    zval *zhdr;
+    zend_long ticks_per_half_distance;
+
+    ZEND_PARSE_PARAMETERS_START(2, 2)
+        Z_PARAM_OBJECT_OF_CLASS(zhdr, php_HdrHistogram_Histogram_ce);
+        Z_PARAM_LONG(ticks_per_half_distance);
+    ZEND_PARSE_PARAMETERS_END();
+
+    hdr = php_hdrhistogram_histogram_from_object(Z_OBJ_P(zhdr))->histogram;
+
+    iterator = emalloc(sizeof(struct hdr_iter));
+    hdr_iter_percentile_init(iterator, hdr, ticks_per_half_distance);
+
+    object_init_ex(return_value, php_HdrHistogram_Iterator_ce);
+    struct php_hdrhistogram_iterator *i = php_hdrhistogram_iterator_from_object(Z_OBJ_P(getThis()));
+    i->iterator = iterator;
+}
+
 PHP_FUNCTION(hdr_init)
 {
     struct hdr_histogram *hdr;
@@ -134,7 +270,9 @@ PHP_FUNCTION(hdr_init)
     res = hdr_init(lowest_discernible_value, highest_trackable_value, significant_figures, &hdr);
 
     if (res == 0) {
-        hdr_register_hdr_resource(return_value, hdr);
+        object_init_ex(return_value, php_HdrHistogram_Histogram_ce);
+        struct php_hdrhistogram_histogram *h = php_hdrhistogram_histogram_from_object(Z_OBJ_P(return_value));
+        h->histogram = hdr;
     } else if (res == EINVAL) {
         php_error_docref(NULL, E_WARNING, "Lowest trackable value has to be >= 1.");
 
@@ -151,11 +289,11 @@ PHP_FUNCTION(hdr_get_memory_size)
     struct hdr_histogram *hdr;
     zval *zhdr;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS(), "r", &zhdr) == FAILURE) {
-        RETURN_FALSE;
-    }
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+        Z_PARAM_OBJECT_OF_CLASS(zhdr, php_HdrHistogram_Histogram_ce);
+    ZEND_PARSE_PARAMETERS_END();
 
-    hdr = hdr_fetch_resource(zhdr, return_value);
+    hdr = php_hdrhistogram_histogram_from_object(Z_OBJ_P(zhdr))->histogram;
 
     RETURN_LONG(hdr_get_memory_size(hdr));
 }
@@ -165,11 +303,11 @@ PHP_FUNCTION(hdr_mean)
     struct hdr_histogram *hdr;
     zval *zhdr;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS(), "r", &zhdr) == FAILURE) {
-        RETURN_FALSE;
-    }
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+        Z_PARAM_OBJECT_OF_CLASS(zhdr, php_HdrHistogram_Histogram_ce);
+    ZEND_PARSE_PARAMETERS_END();
 
-    hdr = hdr_fetch_resource(zhdr, return_value);
+    hdr = php_hdrhistogram_histogram_from_object(Z_OBJ_P(zhdr))->histogram;
 
     RETURN_LONG(hdr_mean(hdr));
 }
@@ -179,11 +317,11 @@ PHP_FUNCTION(hdr_stddev)
     struct hdr_histogram *hdr;
     zval *zhdr;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS(), "r", &zhdr) == FAILURE) {
-        RETURN_FALSE;
-    }
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+        Z_PARAM_OBJECT_OF_CLASS(zhdr, php_HdrHistogram_Histogram_ce);
+    ZEND_PARSE_PARAMETERS_END();
 
-    hdr = hdr_fetch_resource(zhdr, return_value);
+    hdr = php_hdrhistogram_histogram_from_object(Z_OBJ_P(zhdr))->histogram;
 
     RETURN_DOUBLE(hdr_stddev(hdr));
 }
@@ -194,11 +332,11 @@ PHP_FUNCTION(hdr_min)
     struct hdr_histogram *hdr;
     zval *zhdr;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS(), "r", &zhdr) == FAILURE) {
-        RETURN_FALSE;
-    }
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+        Z_PARAM_OBJECT_OF_CLASS(zhdr, php_HdrHistogram_Histogram_ce);
+    ZEND_PARSE_PARAMETERS_END();
 
-    hdr = hdr_fetch_resource(zhdr, return_value);
+    hdr = php_hdrhistogram_histogram_from_object(Z_OBJ_P(zhdr))->histogram;
 
     RETURN_LONG(hdr_min(hdr));
 }
@@ -208,11 +346,11 @@ PHP_FUNCTION(hdr_max)
     struct hdr_histogram *hdr;
     zval *zhdr;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS(), "r", &zhdr) == FAILURE) {
-        RETURN_FALSE;
-    }
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+        Z_PARAM_OBJECT_OF_CLASS(zhdr, php_HdrHistogram_Histogram_ce);
+    ZEND_PARSE_PARAMETERS_END();
 
-    hdr = hdr_fetch_resource(zhdr, return_value);
+    hdr = php_hdrhistogram_histogram_from_object(Z_OBJ_P(zhdr))->histogram;
 
     RETURN_LONG(hdr_max(hdr));
 }
@@ -222,11 +360,11 @@ PHP_FUNCTION(hdr_total_count)
     struct hdr_histogram *hdr;
     zval *zhdr;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS(), "r", &zhdr) == FAILURE) {
-        RETURN_FALSE;
-    }
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+        Z_PARAM_OBJECT_OF_CLASS(zhdr, php_HdrHistogram_Histogram_ce);
+    ZEND_PARSE_PARAMETERS_END();
 
-    hdr = hdr_fetch_resource(zhdr, return_value);
+    hdr = php_hdrhistogram_histogram_from_object(Z_OBJ_P(zhdr))->histogram;
 
     RETURN_LONG(hdr->total_count);
 }
@@ -235,13 +373,14 @@ PHP_FUNCTION(hdr_record_value)
 {
     struct hdr_histogram *hdr;
     zval *zhdr;
-    long value;
+    zend_long value;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS(), "rl", &zhdr, &value) == FAILURE) {
-        RETURN_FALSE;
-    }
+    ZEND_PARSE_PARAMETERS_START(2, 2)
+        Z_PARAM_OBJECT_OF_CLASS(zhdr, php_HdrHistogram_Histogram_ce);
+        Z_PARAM_LONG(value);
+    ZEND_PARSE_PARAMETERS_END();
 
-    hdr = hdr_fetch_resource(zhdr, return_value);
+    hdr = php_hdrhistogram_histogram_from_object(Z_OBJ_P(zhdr))->histogram;
 
     if (hdr_record_value(hdr, value) == 0) {
         RETURN_FALSE;
@@ -254,14 +393,16 @@ PHP_FUNCTION(hdr_record_values)
 {
     struct hdr_histogram *hdr;
     zval *zhdr;
-    long value;
-    long count;
+    zend_long value;
+    zend_long count;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS(), "rll", &zhdr, &value, &count) == FAILURE) {
-        RETURN_FALSE;
-    }
+    ZEND_PARSE_PARAMETERS_START(3, 3)
+        Z_PARAM_OBJECT_OF_CLASS(zhdr, php_HdrHistogram_Histogram_ce);
+        Z_PARAM_LONG(value);
+        Z_PARAM_LONG(count);
+    ZEND_PARSE_PARAMETERS_END();
 
-    hdr = hdr_fetch_resource(zhdr, return_value);
+    hdr = php_hdrhistogram_histogram_from_object(Z_OBJ_P(zhdr))->histogram;
 
     if (hdr_record_values(hdr, value, count) == 0) {
         RETURN_FALSE;
@@ -274,18 +415,21 @@ PHP_FUNCTION(hdr_record_corrected_value)
 {
     struct hdr_histogram *hdr;
     zval *zhdr;
-    long value;
-    long expected_interval;
+    zend_long value;
+    zend_long expected_interval;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS(), "rll", &zhdr, &value, &expected_interval) == FAILURE) {
-        RETURN_FALSE;
-    }
+    ZEND_PARSE_PARAMETERS_START(3, 3)
+        Z_PARAM_OBJECT_OF_CLASS(zhdr, php_HdrHistogram_Histogram_ce);
+        Z_PARAM_LONG(value);
+        Z_PARAM_LONG(expected_interval);
+    ZEND_PARSE_PARAMETERS_END();
 
-    hdr = hdr_fetch_resource(zhdr, return_value);
+    hdr = php_hdrhistogram_histogram_from_object(Z_OBJ_P(zhdr))->histogram;
 
     if (hdr_record_corrected_value(hdr, value, expected_interval)) {
         RETURN_TRUE;
     }
+
     RETURN_FALSE;
 }
 
@@ -294,11 +438,11 @@ PHP_FUNCTION(hdr_reset)
     struct hdr_histogram *hdr;
     zval *zhdr;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS(), "r", &zhdr) == FAILURE) {
-        RETURN_FALSE;
-    }
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+        Z_PARAM_OBJECT_OF_CLASS(zhdr, php_HdrHistogram_Histogram_ce);
+    ZEND_PARSE_PARAMETERS_END();
 
-    hdr = hdr_fetch_resource(zhdr, return_value);
+    hdr = php_hdrhistogram_histogram_from_object(Z_OBJ_P(zhdr))->histogram;
 
     hdr_reset(hdr);
 }
@@ -307,13 +451,14 @@ PHP_FUNCTION(hdr_count_at_value)
 {
     struct hdr_histogram *hdr;
     zval *zhdr;
-    long value;
+    zend_long value;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS(), "rl", &zhdr, &value) == FAILURE) {
-        RETURN_FALSE;
-    }
+    ZEND_PARSE_PARAMETERS_START(2, 2)
+        Z_PARAM_OBJECT_OF_CLASS(zhdr, php_HdrHistogram_Histogram_ce);
+        Z_PARAM_LONG(value);
+    ZEND_PARSE_PARAMETERS_END();
 
-    hdr = hdr_fetch_resource(zhdr, return_value);
+    hdr = php_hdrhistogram_histogram_from_object(Z_OBJ_P(zhdr))->histogram;
 
     RETURN_LONG(hdr_count_at_value(hdr, value));
 }
@@ -324,11 +469,12 @@ PHP_FUNCTION(hdr_value_at_percentile)
     zval *zhdr;
     double percentile;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS(), "rd", &zhdr, &percentile) == FAILURE) {
-        RETURN_FALSE;
-    }
+    ZEND_PARSE_PARAMETERS_START(2, 2)
+        Z_PARAM_OBJECT_OF_CLASS(zhdr, php_HdrHistogram_Histogram_ce);
+        Z_PARAM_DOUBLE(percentile);
+    ZEND_PARSE_PARAMETERS_END();
 
-    hdr = hdr_fetch_resource(zhdr, return_value);
+    hdr = php_hdrhistogram_histogram_from_object(Z_OBJ_P(zhdr))->histogram;
 
     RETURN_LONG(hdr_value_at_percentile(hdr, percentile));
 }
@@ -339,12 +485,13 @@ PHP_FUNCTION(hdr_add)
     zval *a, *b;
     int res;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS(), "rr", &a, &b) == FAILURE) {
-        RETURN_FALSE;
-    }
+    ZEND_PARSE_PARAMETERS_START(2, 2)
+        Z_PARAM_OBJECT_OF_CLASS(a, php_HdrHistogram_Histogram_ce);
+        Z_PARAM_OBJECT_OF_CLASS(b, php_HdrHistogram_Histogram_ce);
+    ZEND_PARSE_PARAMETERS_END();
 
-    hdra = hdr_fetch_resource(a, return_value);
-    hdrb = hdr_fetch_resource(b, return_value);
+    hdra = php_hdrhistogram_histogram_from_object(Z_OBJ_P(a))->histogram;
+    hdrb = php_hdrhistogram_histogram_from_object(Z_OBJ_P(b))->histogram;
 
 #ifdef HAVE_HDRHISTOGRAM_0_11_4
     res = hdr_init(hdra->lowest_discernible_value, hdra->highest_trackable_value, hdra->significant_figures, &hdr_new);
@@ -355,7 +502,9 @@ PHP_FUNCTION(hdr_add)
     hdr_add(hdr_new, hdrb);
 
     if (res == 0) {
-        hdr_register_hdr_resource(return_value, hdr_new);
+        object_init_ex(return_value, php_HdrHistogram_Histogram_ce);
+        struct php_hdrhistogram_histogram *h = php_hdrhistogram_histogram_from_object(Z_OBJ_P(return_value));
+        h->histogram = hdr_new;
     } else if (res == EINVAL) {
         php_error_docref(NULL, E_WARNING, "Lowest trackable value has to be >= 1.");
 
@@ -372,12 +521,13 @@ PHP_FUNCTION(hdr_merge_into)
     struct hdr_histogram *hdra, *hdrb;
     zval *a, *b;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS(), "rr", &a, &b) == FAILURE) {
-        RETURN_FALSE;
-    }
+    ZEND_PARSE_PARAMETERS_START(2, 2)
+        Z_PARAM_OBJECT_OF_CLASS(a, php_HdrHistogram_Histogram_ce);
+        Z_PARAM_OBJECT_OF_CLASS(b, php_HdrHistogram_Histogram_ce);
+    ZEND_PARSE_PARAMETERS_END();
 
-    hdra = hdr_fetch_resource(a, return_value);
-    hdrb = hdr_fetch_resource(b, return_value);
+    hdra = php_hdrhistogram_histogram_from_object(Z_OBJ_P(a))->histogram;
+    hdrb = php_hdrhistogram_histogram_from_object(Z_OBJ_P(b))->histogram;
 
     RETURN_LONG(hdr_add(hdra, hdrb));
 }
@@ -388,16 +538,18 @@ PHP_FUNCTION(hdr_iter_init)
     struct hdr_histogram *hdr;
     zval *zhdr;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS(), "r", &zhdr) == FAILURE) {
-        RETURN_FALSE;
-    }
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+        Z_PARAM_OBJECT_OF_CLASS(zhdr, php_HdrHistogram_Histogram_ce);
+    ZEND_PARSE_PARAMETERS_END();
 
-    hdr = hdr_fetch_resource(zhdr, return_value);
+    hdr = php_hdrhistogram_histogram_from_object(Z_OBJ_P(zhdr))->histogram;
 
     iterator = emalloc(sizeof(struct hdr_iter));
     hdr_iter_init(iterator, hdr);
 
-    hdr_register_iter_resource(return_value, iterator);
+    object_init_ex(return_value, php_HdrHistogram_Iterator_ce);
+    struct php_hdrhistogram_iterator *i = php_hdrhistogram_iterator_from_object(Z_OBJ_P(return_value));
+    i->iterator = iterator;
 }
 
 PHP_FUNCTION(hdr_percentile_iter_init)
@@ -405,18 +557,21 @@ PHP_FUNCTION(hdr_percentile_iter_init)
     struct hdr_iter *iterator;
     struct hdr_histogram *hdr;
     zval *zhdr;
-    long ticks_per_half_distance;
+    zend_long ticks_per_half_distance;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS(), "rl", &zhdr, &ticks_per_half_distance) == FAILURE) {
-        RETURN_FALSE;
-    }
+    ZEND_PARSE_PARAMETERS_START(2, 2)
+        Z_PARAM_OBJECT_OF_CLASS(zhdr, php_HdrHistogram_Histogram_ce);
+        Z_PARAM_LONG(ticks_per_half_distance);
+    ZEND_PARSE_PARAMETERS_END();
 
-    hdr = hdr_fetch_resource(zhdr, return_value);
+    hdr = php_hdrhistogram_histogram_from_object(Z_OBJ_P(zhdr))->histogram;
 
     iterator = emalloc(sizeof(struct hdr_iter));
     hdr_iter_percentile_init(iterator, hdr, ticks_per_half_distance);
 
-    hdr_register_iter_resource(return_value, iterator);
+    object_init_ex(return_value, php_HdrHistogram_Iterator_Percentile_ce);
+    struct php_hdrhistogram_iterator *i = php_hdrhistogram_iterator_from_object(Z_OBJ_P(return_value));
+    i->iterator = iterator;
 }
 
 PHP_FUNCTION(hdr_iter_next)
@@ -424,11 +579,11 @@ PHP_FUNCTION(hdr_iter_next)
     struct hdr_iter *iterator;
     zval *zhdr;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS(), "r", &zhdr) == FAILURE) {
-        RETURN_FALSE;
-    }
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+        Z_PARAM_OBJECT_OF_CLASS(zhdr, php_HdrHistogram_Iterator_ce);
+    ZEND_PARSE_PARAMETERS_END();
 
-    iterator = hdr_fetch_iterator(zhdr, return_value);
+    iterator = php_hdrhistogram_iterator_from_object(Z_OBJ_P(zhdr))->iterator;
 
     if (hdr_iter_next(iterator)) {
         array_init(return_value);
@@ -446,11 +601,11 @@ PHP_FUNCTION(hdr_percentile_iter_next)
     struct hdr_iter *iterator;
     zval *zhdr;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS(), "r", &zhdr) == FAILURE) {
-        RETURN_FALSE;
-    }
+   ZEND_PARSE_PARAMETERS_START(1, 1)
+        Z_PARAM_OBJECT_OF_CLASS(zhdr, php_HdrHistogram_Iterator_Percentile_ce);
+    ZEND_PARSE_PARAMETERS_END();
 
-    iterator = hdr_fetch_iterator(zhdr, return_value);
+    iterator = php_hdrhistogram_iterator_from_object(Z_OBJ_P(zhdr))->iterator;
 
     if (hdr_iter_next(iterator)) {
         array_init(return_value);
@@ -476,11 +631,11 @@ PHP_FUNCTION(hdr_export)
     int found = 0;
     long skipped = 0;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS(), "r", &zhdr) == FAILURE) {
-        RETURN_FALSE;
-    }
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+        Z_PARAM_OBJECT_OF_CLASS(zhdr, php_HdrHistogram_Histogram_ce);
+    ZEND_PARSE_PARAMETERS_END();
 
-    hdr = hdr_fetch_resource(zhdr, return_value);
+    hdr = php_hdrhistogram_histogram_from_object(Z_OBJ_P(zhdr))->histogram;
 
     array_init(return_value);
 
@@ -587,7 +742,9 @@ PHP_FUNCTION(hdr_import)
         res = hdr_init(lowest_discernible_value, highest_trackable_value, significant_figures, &hdr);
 
         if (res == 0) {
-            hdr_register_hdr_resource(return_value, hdr);
+            object_init_ex(return_value, php_HdrHistogram_Histogram_ce);
+            struct php_hdrhistogram_histogram *h = php_hdrhistogram_histogram_from_object(Z_OBJ_P(return_value));
+            h->histogram = hdr;
         } else if (res == EINVAL) {
             php_error_docref(NULL, E_WARNING, "Lowest trackable value has to be >= 1.");
 
@@ -629,7 +786,9 @@ PHP_FUNCTION(hdr_import)
         res = hdr_init(lowest_discernible_value, highest_trackable_value, significant_figures, &hdr);
 
         if (res == 0) {
-            hdr_register_hdr_resource(return_value, hdr);
+            object_init_ex(return_value, php_HdrHistogram_Histogram_ce);
+            struct php_hdrhistogram_histogram *h = php_hdrhistogram_histogram_from_object(Z_OBJ_P(return_value));
+            h->histogram = hdr;
         } else if (res == EINVAL) {
             php_error_docref(NULL, E_WARNING, "Lowest trackable value has to be >= 1.");
 
@@ -672,7 +831,9 @@ PHP_FUNCTION(hdr_import)
         res = hdr_init(lowest_discernible_value, highest_trackable_value, significant_figures, &hdr);
 
         if (res == 0) {
-            hdr_register_hdr_resource(return_value, hdr);
+            object_init_ex(return_value, php_HdrHistogram_Histogram_ce);
+            struct php_hdrhistogram_histogram *h = php_hdrhistogram_histogram_from_object(Z_OBJ_P(return_value));
+            h->histogram = hdr;
         } else if (res == EINVAL) {
             php_error_docref(NULL, E_WARNING, "Lowest trackable value has to be >= 1.");
 
@@ -711,11 +872,11 @@ PHP_FUNCTION(hdr_base64_encode)
     zval *zhdr;
     char *result = NULL;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS(), "r", &zhdr) == FAILURE) {
-        RETURN_FALSE;
-    }
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+        Z_PARAM_OBJECT_OF_CLASS(zhdr, php_HdrHistogram_Histogram_ce);
+    ZEND_PARSE_PARAMETERS_END();
 
-    hdr = hdr_fetch_resource(zhdr, return_value);
+    hdr = php_hdrhistogram_histogram_from_object(Z_OBJ_P(zhdr))->histogram;
 
     if (hdr_log_encode(hdr, &result) != 0) {
         php_error_docref(NULL, E_WARNING, "Cannot encode histogram");
@@ -742,5 +903,7 @@ PHP_FUNCTION(hdr_base64_decode)
         RETURN_FALSE;
     }
 
-    hdr_register_hdr_resource(return_value, hdr);
+    object_init_ex(return_value, php_HdrHistogram_Histogram_ce);
+    struct php_hdrhistogram_histogram *h = php_hdrhistogram_histogram_from_object(Z_OBJ_P(return_value));
+    h->histogram = hdr;
 }

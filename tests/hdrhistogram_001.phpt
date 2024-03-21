@@ -28,7 +28,8 @@ echo "Max: " . hdr_max($hdr) . "\n";
 
 ?>
 --EXPECTF--
-resource(4) of type (hdr_histogram)
+object(HdrHistogram\Histogram)#%d (0) {
+}
 Memory: 820%d
 Recorded
 StdDev: 0.00

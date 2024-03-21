@@ -96,7 +96,7 @@ echo hdr_max(hdr_base64_decode(hdr_base64_encode(hdr_init(1, 100, 1))));
 92: 4
 96: 4
 Total: 100
-hdr_base64_encode(): Argument #1 ($hdr) must be of type resource, string given
+hdr_base64_encode(): Argument #1 ($hdr) must be of type HdrHistogram\Histogram, string given
 
 Warning: hdr_base64_decode(): Cannot decode histogram in %s on line %d
 0
