@@ -36,25 +36,13 @@ namespace {
 
     function hdr_merge_into(\HdrHistogram\Histogram $hdr1, \HdrHistogram\Histogram $hdr2): int {};
 
-    /**
-     * @return resource|false
-     */
-    function hdr_iter_init(\HdrHistogram\Histogram $hdr) {};
+    function hdr_iter_init(\HdrHistogram\Histogram $hdr): \HdrHistogram\Iterator|false {};
 
-    /**
-     * @param resource $hdr
-     */
-    function hdr_iter_next($hdr): false|array {};
+    function hdr_iter_next(\HdrHistogram\Iterator $hdr): false|array {};
 
-    /**
-     * @return resource|false
-     */
-    function hdr_percentile_iter_init(\HdrHistogram\Histogram $hdr, int $ticks_per_half_distance) {};
+    function hdr_percentile_iter_init(\HdrHistogram\Histogram $hdr, int $ticks_per_half_distance): \HdrHistogram\Iterator\Percentile|false {};
 
-    /**
-     * @param resource $hdr
-     */
-    function hdr_percentile_iter_next($hdr): false|array {};
+    function hdr_percentile_iter_next(\HdrHistogram\Iterator\Percentile $hdr): false|array {};
 
     function hdr_export(\HdrHistogram\Histogram $hdr): array {};
 
@@ -72,5 +60,23 @@ namespace HdrHistogram {
      */
     final class Histogram {
         public function __construct(int $lowest_trackable_value, int $highest_trackable_value, int $significant_figures) { }
+    }
+
+    /**
+     * @strict-properties
+     * @not-serializable
+     */
+    final class Iterator {
+        public function __construct(Histogram $histogram) { }
+    }
+}
+
+namespace HdrHistogram\Iterator {
+    /**
+     * @strict-properties
+     * @not-serializable
+     */
+    final class Percentile {
+        public function __construct(\HdrHistogram\Histogram $histogram) { }
     }
 }

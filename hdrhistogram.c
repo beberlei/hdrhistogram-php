@@ -21,8 +21,6 @@
 
 #define PHP_HDRHISTOGRAM_DESCRIPTOR_RES_NAME "hdr_histogram"
 
-static int le_hdrhistogram_iter_descriptor;
-
 static zend_class_entry *php_HdrHistogram_Histogram_ce;
 static zend_object_handlers php_hdrhistogram_histogram_object_handlers;
 
@@ -62,17 +60,46 @@ static void php_hdrhistogram_histogram_free(zend_object *object)
     zend_object_std_dtor(&histogram->std);
 }
 
-static zend_always_inline void hdr_register_iter_resource(zval *return_value, struct hdr_iter* iter)
-{
-    ZVAL_RES(return_value, zend_register_resource(iter, le_hdrhistogram_iter_descriptor));
-}
+static zend_class_entry *php_HdrHistogram_Iterator_ce;
+static zend_object_handlers php_hdrhistogram_iterator_object_handlers;
 
-static zend_always_inline struct hdr_iter* hdr_fetch_iterator(zval *res, zval *return_value)
-{
+struct php_hdrhistogram_iterator {
     struct hdr_iter *iterator;
+    zend_object std;
+};
 
-    return (struct hdr_iter*)zend_fetch_resource(Z_RES_P(res), "hdr_iterator", le_hdrhistogram_iter_descriptor);
+static inline struct php_hdrhistogram_iterator *php_hdrhistogram_iterator_from_object(zend_object *object) {
+    return (struct php_hdrhistogram_iterator *)((char *)(object) - XtOffsetOf(struct php_hdrhistogram_iterator, std));
 }
+
+static zend_object *php_hdrhistogram_iterator_new(zend_class_entry *ce)
+{
+    struct php_hdrhistogram_iterator *iterator;
+#if PHP_VERSION_ID >= 80000
+    iterator = zend_object_alloc(sizeof(struct php_hdrhistogram_iterator), ce);
+#else
+    iterator = ecalloc(1, sizeof(struct php_hdrhistogram_iterator) + sizeof(zval) * (ce->default_properties_count - 1));
+#endif
+
+    zend_object_std_init(&iterator->std, ce);
+    object_properties_init(&iterator->std, ce);
+    iterator->std.handlers = &php_hdrhistogram_iterator_object_handlers;
+
+    iterator->iterator = NULL;
+
+    return &iterator->std;
+}
+
+static void php_hdrhistogram_iterator_free(zend_object *object)
+{
+    struct php_hdrhistogram_iterator *iterator = php_hdrhistogram_iterator_from_object(object);
+
+    efree(iterator->iterator);
+
+    zend_object_std_dtor(&iterator->std);
+}
+
+static zend_class_entry *php_HdrHistogram_Iterator_Percentile_ce;
 
 zend_module_entry hdrhistogram_module_entry = {
     STANDARD_MODULE_HEADER,
@@ -91,11 +118,6 @@ zend_module_entry hdrhistogram_module_entry = {
 ZEND_GET_MODULE(hdrhistogram)
 #endif
 
-static void php_hdrhistogram_iterator_descriptor_dtor(zend_resource *rsrc)
-{
-    efree(rsrc->ptr);
-}
-
 PHP_MINIT_FUNCTION(hdrhistogram)
 {
     php_HdrHistogram_Histogram_ce = register_class_HdrHistogram_Histogram();
@@ -109,12 +131,23 @@ PHP_MINIT_FUNCTION(hdrhistogram)
     php_HdrHistogram_Histogram_ce->unserialize  = zend_class_unserialize_deny;
 #endif
 
-    le_hdrhistogram_iter_descriptor = zend_register_list_destructors_ex(
-        php_hdrhistogram_iterator_descriptor_dtor,
-        NULL,
-        "hdr_iterator",
-        module_number
-    );
+    php_HdrHistogram_Iterator_ce = register_class_HdrHistogram_Iterator();
+    php_HdrHistogram_Iterator_ce->create_object = php_hdrhistogram_iterator_new;
+    memcpy(&php_hdrhistogram_iterator_object_handlers, zend_get_std_object_handlers(), sizeof(zend_object_handlers));
+    php_hdrhistogram_iterator_object_handlers.offset = XtOffsetOf(struct php_hdrhistogram_iterator, std);
+    php_hdrhistogram_iterator_object_handlers.free_obj = php_hdrhistogram_iterator_free;
+    php_hdrhistogram_iterator_object_handlers.clone_obj = NULL;
+#if PHP_VERSION_ID < 80100
+    php_HdrHistogram_Iterator_ce->serialize    = zend_class_serialize_deny;
+    php_HdrHistogram_Iterator_ce->unserialize  = zend_class_unserialize_deny;
+#endif
+
+    php_HdrHistogram_Iterator_Percentile_ce = register_class_HdrHistogram_Iterator_Percentile();
+    php_HdrHistogram_Iterator_Percentile_ce->create_object = php_hdrhistogram_iterator_new;
+#if PHP_VERSION_ID < 80100
+    php_HdrHistogram_Iterator_Percentile_ce->serialize    = zend_class_serialize_deny;
+    php_HdrHistogram_Iterator_Percentile_ce->unserialize  = zend_class_unserialize_deny;
+#endif
 
     return SUCCESS;
 }
@@ -177,6 +210,48 @@ ZEND_METHOD(HdrHistogram_Histogram, __construct)
     }
 
     h->histogram = hdr;
+}
+
+ZEND_METHOD(HdrHistogram_Iterator, __construct)
+{
+    struct hdr_iter *iterator;
+    struct hdr_histogram *hdr;
+    zval *zhdr;
+
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+        Z_PARAM_OBJECT_OF_CLASS(zhdr, php_HdrHistogram_Histogram_ce);
+    ZEND_PARSE_PARAMETERS_END();
+
+    hdr = php_hdrhistogram_histogram_from_object(Z_OBJ_P(zhdr))->histogram;
+
+    iterator = emalloc(sizeof(struct hdr_iter));
+    hdr_iter_init(iterator, hdr);
+
+    object_init_ex(return_value, php_HdrHistogram_Iterator_ce);
+    struct php_hdrhistogram_iterator *i = php_hdrhistogram_iterator_from_object(Z_OBJ_P(getThis()));
+    i->iterator = iterator;
+}
+
+ZEND_METHOD(HdrHistogram_Iterator_Percentile, __construct)
+{
+    struct hdr_iter *iterator;
+    struct hdr_histogram *hdr;
+    zval *zhdr;
+    zend_long ticks_per_half_distance;
+
+    ZEND_PARSE_PARAMETERS_START(2, 2)
+        Z_PARAM_OBJECT_OF_CLASS(zhdr, php_HdrHistogram_Histogram_ce);
+        Z_PARAM_LONG(ticks_per_half_distance);
+    ZEND_PARSE_PARAMETERS_END();
+
+    hdr = php_hdrhistogram_histogram_from_object(Z_OBJ_P(zhdr))->histogram;
+
+    iterator = emalloc(sizeof(struct hdr_iter));
+    hdr_iter_percentile_init(iterator, hdr, ticks_per_half_distance);
+
+    object_init_ex(return_value, php_HdrHistogram_Iterator_ce);
+    struct php_hdrhistogram_iterator *i = php_hdrhistogram_iterator_from_object(Z_OBJ_P(getThis()));
+    i->iterator = iterator;
 }
 
 PHP_FUNCTION(hdr_init)
@@ -472,7 +547,9 @@ PHP_FUNCTION(hdr_iter_init)
     iterator = emalloc(sizeof(struct hdr_iter));
     hdr_iter_init(iterator, hdr);
 
-    hdr_register_iter_resource(return_value, iterator);
+    object_init_ex(return_value, php_HdrHistogram_Iterator_ce);
+    struct php_hdrhistogram_iterator *i = php_hdrhistogram_iterator_from_object(Z_OBJ_P(return_value));
+    i->iterator = iterator;
 }
 
 PHP_FUNCTION(hdr_percentile_iter_init)
@@ -492,7 +569,9 @@ PHP_FUNCTION(hdr_percentile_iter_init)
     iterator = emalloc(sizeof(struct hdr_iter));
     hdr_iter_percentile_init(iterator, hdr, ticks_per_half_distance);
 
-    hdr_register_iter_resource(return_value, iterator);
+    object_init_ex(return_value, php_HdrHistogram_Iterator_Percentile_ce);
+    struct php_hdrhistogram_iterator *i = php_hdrhistogram_iterator_from_object(Z_OBJ_P(return_value));
+    i->iterator = iterator;
 }
 
 PHP_FUNCTION(hdr_iter_next)
@@ -500,11 +579,11 @@ PHP_FUNCTION(hdr_iter_next)
     struct hdr_iter *iterator;
     zval *zhdr;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS(), "r", &zhdr) == FAILURE) {
-        RETURN_FALSE;
-    }
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+        Z_PARAM_OBJECT_OF_CLASS(zhdr, php_HdrHistogram_Iterator_ce);
+    ZEND_PARSE_PARAMETERS_END();
 
-    iterator = hdr_fetch_iterator(zhdr, return_value);
+    iterator = php_hdrhistogram_iterator_from_object(Z_OBJ_P(zhdr))->iterator;
 
     if (hdr_iter_next(iterator)) {
         array_init(return_value);
@@ -522,11 +601,11 @@ PHP_FUNCTION(hdr_percentile_iter_next)
     struct hdr_iter *iterator;
     zval *zhdr;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS(), "r", &zhdr) == FAILURE) {
-        RETURN_FALSE;
-    }
+   ZEND_PARSE_PARAMETERS_START(1, 1)
+        Z_PARAM_OBJECT_OF_CLASS(zhdr, php_HdrHistogram_Iterator_Percentile_ce);
+    ZEND_PARSE_PARAMETERS_END();
 
-    iterator = hdr_fetch_iterator(zhdr, return_value);
+    iterator = php_hdrhistogram_iterator_from_object(Z_OBJ_P(zhdr))->iterator;
 
     if (hdr_iter_next(iterator)) {
         array_init(return_value);
