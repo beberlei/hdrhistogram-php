@@ -1,127 +1,76 @@
 <?php
 
 /**
+ * @generate-class-entries
  * @generate-function-entries
  * @generate-legacy-arginfo
  */
+namespace {
+    function hdr_init(int $lowest_trackable_value, int $highest_trackable_value, int $significant_figures): \HdrHistogram\Histogram|false {}
 
-/**
- * @return resource|false
- */
-function hdr_init(int $lowest_trackable_value, int $highest_trackable_value, int $significant_figures) {}
+    function hdr_get_memory_size(\HdrHistogram\Histogram $hdr): int {};
 
-/**
- * @param resource $hdr
- */
-function hdr_get_memory_size($hdr): int {};
+    function hdr_record_value(\HdrHistogram\Histogram $hdr, int $value): bool {};
 
-/**
- * @param resource $hdr
- */
-function hdr_record_value($hdr, int $value): bool {};
+    function hdr_record_values(\HdrHistogram\Histogram $hdr, int $value, int $count): bool {};
 
-/**
- * @param resource $hdr
- */
-function hdr_record_values($hdr, int $value, int $count): bool {};
+    function hdr_record_corrected_value(\HdrHistogram\Histogram $hdr, int $value, int $expected_interval): bool {};
 
-/**
- * @param resource $hdr
- */
-function hdr_record_corrected_value($hdr, int $value, int $expected_interval): bool {};
+    function hdr_mean(\HdrHistogram\Histogram $hdr): int {};
 
-/**
- * @param resource $hdr
- */
-function hdr_mean($hdr): int {};
+    function hdr_stddev(\HdrHistogram\Histogram $hdr): float {};
 
-/**
- * @param resource $hdr
- */
-function hdr_stddev($hdr): float {};
+    function hdr_min(\HdrHistogram\Histogram $hdr): int {};
 
-/**
- * @param resource $hdr
- */
-function hdr_min($hdr): int {};
+    function hdr_max(\HdrHistogram\Histogram $hdr): int {};
 
-/**
- * @param resource $hdr
- */
-function hdr_max($hdr): int {};
+    function hdr_total_count(\HdrHistogram\Histogram $hdr): int {};
 
-/**
- * @param resource $hdr
- */
-function hdr_total_count($hdr): int {};
+    function hdr_reset(\HdrHistogram\Histogram $hdr): void {};
 
-/**
- * @param resource $hdr
- */
-function hdr_reset($hdr): void {};
+    function hdr_count_at_value(\HdrHistogram\Histogram $hdr, int $value): int {};
 
-/**
- * @param resource $hdr
- */
-function hdr_count_at_value($hdr, int $value): int {};
+    function hdr_value_at_percentile(\HdrHistogram\Histogram $hdr, float $percentile): int {};
 
-/**
- * @param resource $hdr
- */
-function hdr_value_at_percentile($hdr, float $percentile): int {};
+    function hdr_add(\HdrHistogram\Histogram $hdr1, \HdrHistogram\Histogram $hdr2): \HdrHistogram\Histogram|false {};
 
-/**
- * @param resource $hdr1
- * @param resource $hdr2
- * @return resource|false
- */
-function hdr_add($hdr1, $hdr2) {};
+    function hdr_merge_into(\HdrHistogram\Histogram $hdr1, \HdrHistogram\Histogram $hdr2): int {};
 
-/**
- * @param resource $hdr1
- * @param resource $hdr2
- */
-function hdr_merge_into($hdr1, $hdr2): int {};
+    /**
+     * @return resource|false
+     */
+    function hdr_iter_init(\HdrHistogram\Histogram $hdr) {};
 
-/**
- * @param resource $hdr
- * @return resource|false
- */
-function hdr_iter_init($hdr) {};
+    /**
+     * @param resource $hdr
+     */
+    function hdr_iter_next($hdr): false|array {};
 
-/**
- * @param resource $hdr
- */
-function hdr_iter_next($hdr): false|Array {};
+    /**
+     * @return resource|false
+     */
+    function hdr_percentile_iter_init(\HdrHistogram\Histogram $hdr, int $ticks_per_half_distance) {};
 
-/**
- * @param resource $hdr
- * @return resource|false
- */
-function hdr_percentile_iter_init($hdr, int $ticks_per_half_distance) {};
+    /**
+     * @param resource $hdr
+     */
+    function hdr_percentile_iter_next($hdr): false|array {};
 
-/**
- * @param resource $hdr
- */
-function hdr_percentile_iter_next($hdr): false|Array {};
+    function hdr_export(\HdrHistogram\Histogram $hdr): array {};
 
-/**
- * @param resource $hdr
- */
-function hdr_export($hdr): Array {};
+    function hdr_import(array $import): \HdrHistogram\Histogram|false {};
 
-/**
- * @return resource|false
- */
-function hdr_import(Array $import) {};
+    function hdr_base64_encode(\HdrHistogram\Histogram $hdr): false|string {};
 
-/**
- * @param resource $hdr
- */
-function hdr_base64_encode($hdr): false|string {};
+    function hdr_base64_decode(string $data): \HdrHistogram\Histogram|false {};
+}
 
-/**
- * @return resource|false
- */
-function hdr_base64_decode(string $data) {};
-
+namespace HdrHistogram {
+    /**
+     * @strict-properties
+     * @not-serializable
+     */
+    final class Histogram {
+        public function __construct(int $lowest_trackable_value, int $highest_trackable_value, int $significant_figures) { }
+    }
+}

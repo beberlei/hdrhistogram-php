@@ -26,7 +26,8 @@ if (hdr_record_values($hdr, 4, 2)) {
 echo "StdDev: " . number_format(hdr_stddev($hdr), 2) . "\n";
 echo "Max: " . hdr_max($hdr) . "\n";
 --EXPECTF--
-resource(4) of type (hdr_histogram)
+object(HdrHistogram\Histogram)#%d (0) {
+}
 Memory: 820%d
 Recorded
 StdDev: 0.00
