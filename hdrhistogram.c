@@ -294,7 +294,7 @@ PHP_FUNCTION(hdr_mean)
 
     hdr = php_hdrhistogram_histogram_from_object(Z_OBJ_P(zhdr))->histogram;
 
-    RETURN_LONG(hdr_mean(hdr));
+    RETURN_DOUBLE(hdr_mean(hdr));
 }
 
 PHP_FUNCTION(hdr_stddev)
