@@ -177,7 +177,7 @@ ZEND_METHOD(HdrHistogram_Histogram, __construct)
 #if PHP_VERSION_ID >= 80000
         zend_argument_value_error(1, "must be greater than or equal to 1");
 #else
-        zend_throw_exception_ex(NULL, 0, "%s(): Argument #%d ($%s) must be greater than or equal to 1", "HdrHistogram\\Histogram::__construct", 1, "lowest_discernible_value");
+        zend_throw_exception_ex(NULL, 0, "%s(): Argument #%d ($%s) must be greater than or equal to 1", "HdrHistogram\\Histogram::__construct", 1, "lowestDiscernibleValue");
 #endif
         return;
     }

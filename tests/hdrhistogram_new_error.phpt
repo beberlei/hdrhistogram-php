@@ -12,4 +12,4 @@ try {
 }
 ?>
 --EXPECTF--
-HdrHistogram\Histogram::__construct(): Argument #1 ($lowest_discernible_value) must be greater than or equal to 1
+HdrHistogram\Histogram::__construct(): Argument #1 ($lowestDiscernibleValue) must be greater than or equal to 1
