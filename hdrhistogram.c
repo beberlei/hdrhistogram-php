@@ -106,9 +106,9 @@ zend_module_entry hdrhistogram_module_entry = {
     "hdrhistogram",
     ext_functions,                         /* List of functions exposed */
     PHP_MINIT(hdrhistogram),               /* Module init callback */
-    PHP_MSHUTDOWN(hdrhistogram),           /* Module shutdown callback */
-    PHP_RINIT(hdrhistogram),               /* Request init callback */
-    PHP_RSHUTDOWN(hdrhistogram),           /* Request shutdown callback */
+    NULL,                                  /* Module shutdown callback */
+    NULL,                                  /* Request init callback */
+    NULL,                                  /* Request shutdown callback */
     PHP_MINFO(hdrhistogram),               /* Module info callback */
     PHP_HDR_HISTOGRAM_VERSION,
     STANDARD_MODULE_PROPERTIES
@@ -149,21 +149,6 @@ PHP_MINIT_FUNCTION(hdrhistogram)
     php_HdrHistogram_Iterator_Percentile_ce->unserialize  = zend_class_unserialize_deny;
 #endif
 
-    return SUCCESS;
-}
-
-PHP_MSHUTDOWN_FUNCTION(hdrhistogram)
-{
-    return SUCCESS;
-}
-
-PHP_RINIT_FUNCTION(hdrhistogram)
-{
-    return SUCCESS;
-}
-
-PHP_RSHUTDOWN_FUNCTION(hdrhistogram)
-{
     return SUCCESS;
 }
 
