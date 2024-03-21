@@ -59,7 +59,7 @@ namespace HdrHistogram {
      * @not-serializable
      */
     final class Histogram {
-        public function __construct(int $lowest_trackable_value, int $highest_trackable_value, int $significant_figures) { }
+        public function __construct(int $lowest_discernible_value, int $highest_trackable_value, int $significant_figures) { }
     }
 
     /**

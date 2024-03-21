@@ -1,5 +1,5 @@
 /* This is a generated file, edit the .stub.php file instead.
- * Stub hash: a4f07acb61dffd93ab619db6f23fc8e50db76490 */
+ * Stub hash: 70b747d999d5180b4b5ae49d3e474e6f6a6535da */
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_hdr_init, 0, 0, 3)
 	ZEND_ARG_INFO(0, lowest_trackable_value)
@@ -77,7 +77,11 @@ ZEND_BEGIN_ARG_INFO_EX(arginfo_hdr_base64_decode, 0, 0, 1)
 	ZEND_ARG_INFO(0, data)
 ZEND_END_ARG_INFO()
 
-#define arginfo_class_HdrHistogram_Histogram___construct arginfo_hdr_init
+ZEND_BEGIN_ARG_INFO_EX(arginfo_class_HdrHistogram_Histogram___construct, 0, 0, 3)
+	ZEND_ARG_INFO(0, lowest_discernible_value)
+	ZEND_ARG_INFO(0, highest_trackable_value)
+	ZEND_ARG_INFO(0, significant_figures)
+ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_class_HdrHistogram_Iterator___construct, 0, 0, 1)
 	ZEND_ARG_INFO(0, histogram)

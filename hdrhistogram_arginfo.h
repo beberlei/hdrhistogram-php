@@ -1,5 +1,5 @@
 /* This is a generated file, edit the .stub.php file instead.
- * Stub hash: a4f07acb61dffd93ab619db6f23fc8e50db76490 */
+ * Stub hash: 70b747d999d5180b4b5ae49d3e474e6f6a6535da */
 
 ZEND_BEGIN_ARG_WITH_RETURN_OBJ_TYPE_MASK_EX(arginfo_hdr_init, 0, 3, HdrHistogram\\Histogram, MAY_BE_FALSE)
 	ZEND_ARG_TYPE_INFO(0, lowest_trackable_value, IS_LONG, 0)
@@ -98,7 +98,7 @@ ZEND_BEGIN_ARG_WITH_RETURN_OBJ_TYPE_MASK_EX(arginfo_hdr_base64_decode, 0, 1, Hdr
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_class_HdrHistogram_Histogram___construct, 0, 0, 3)
-	ZEND_ARG_TYPE_INFO(0, lowest_trackable_value, IS_LONG, 0)
+	ZEND_ARG_TYPE_INFO(0, lowest_discernible_value, IS_LONG, 0)
 	ZEND_ARG_TYPE_INFO(0, highest_trackable_value, IS_LONG, 0)
 	ZEND_ARG_TYPE_INFO(0, significant_figures, IS_LONG, 0)
 ZEND_END_ARG_INFO()
