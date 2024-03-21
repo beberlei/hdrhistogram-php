@@ -14,6 +14,8 @@ while ($data = hdr_iter_next($iterator)) {
         var_dump($data);
     }
 }
+
+?>
 --EXPECT--
 array(4) {
   ["value"]=>

@@ -35,6 +35,8 @@ try {
 echo hdr_base64_decode("foo");
 
 echo hdr_max(hdr_base64_decode(hdr_base64_encode(hdr_init(1, 100, 1))));
+
+?>
 --EXPECTF--
 0: 1
 1: 1

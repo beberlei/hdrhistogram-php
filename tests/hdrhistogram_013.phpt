@@ -11,6 +11,8 @@ $imported = hdr_import($payload);
 
 var_dump(hdr_export($imported));
 var_dump(hdr_export(hdr_import(hdr_export($imported))));
+
+?>
 --EXPECTF--
 array(1) {
   ["v"]=>

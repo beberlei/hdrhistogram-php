@@ -11,6 +11,8 @@ for ($i = 1; $i <= 100; $i++) {
 
 echo "perc(50): " . hdr_value_at_percentile($hdr, 50) . "\n";
 echo "perc(95): " . hdr_value_at_percentile($hdr, 95) . "\n";
+
+?>
 --EXPECTF--
 perc(50): 50
 perc(95): 95

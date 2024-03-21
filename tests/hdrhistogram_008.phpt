@@ -13,6 +13,8 @@ $iterator = hdr_percentile_iter_init($a, 20);
 while ($bucket = hdr_percentile_iter_next($iterator)) {
     echo $bucket['percentile'] . '-' . $bucket['percentile_to_iterate_to'] . '%: ' . $bucket['count_at_index'] . "\n";
 }
+
+?>
 --EXPECT--
 0-2.5%: 110
 2.5-5%: 109

@@ -10,6 +10,8 @@ echo "Count(1): ". hdr_count_at_value($hdr, 1) . "\n";
 hdr_reset($hdr);
 echo "Max: " . hdr_max($hdr) . "\n";
 echo "Count(1): ". hdr_count_at_value($hdr, 1) . "\n";
+
+?>
 --EXPECTF--
 Max: 1
 Count(1): 1
