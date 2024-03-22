@@ -205,7 +205,7 @@ ZEND_METHOD(HdrHistogram_Iterator, __construct)
 
     struct hdr_histogram *hdr = php_hdrhistogram_histogram_from_object(Z_OBJ_P(zhdr))->histogram;
 
-    struct hdr_iter *iterator = emalloc(sizeof(struct hdr_iter));
+    struct hdr_iter *iterator = emalloc(sizeof(*iterator));
     hdr_iter_init(iterator, hdr);
 
     object_init_ex(return_value, php_HdrHistogram_Iterator_ce);
@@ -225,7 +225,7 @@ ZEND_METHOD(HdrHistogram_Iterator_Percentile, __construct)
 
     struct hdr_histogram *hdr = php_hdrhistogram_histogram_from_object(Z_OBJ_P(zhdr))->histogram;
 
-    struct hdr_iter *iterator = emalloc(sizeof(struct hdr_iter));
+    struct hdr_iter *iterator = emalloc(sizeof(*iterator));
     hdr_iter_percentile_init(iterator, hdr, ticks_per_half_distance);
 
     object_init_ex(return_value, php_HdrHistogram_Iterator_ce);
@@ -508,7 +508,7 @@ PHP_FUNCTION(hdr_iter_init)
 
     struct hdr_histogram *hdr = php_hdrhistogram_histogram_from_object(Z_OBJ_P(zhdr))->histogram;
 
-    struct hdr_iter *iterator = emalloc(sizeof(struct hdr_iter));
+    struct hdr_iter *iterator = emalloc(sizeof(*iterator));
     hdr_iter_init(iterator, hdr);
 
     object_init_ex(return_value, php_HdrHistogram_Iterator_ce);
@@ -528,7 +528,7 @@ PHP_FUNCTION(hdr_percentile_iter_init)
 
     struct hdr_histogram *hdr = php_hdrhistogram_histogram_from_object(Z_OBJ_P(zhdr))->histogram;
 
-    struct hdr_iter *iterator = emalloc(sizeof(struct hdr_iter));
+    struct hdr_iter *iterator = emalloc(sizeof(*iterator));
     hdr_iter_percentile_init(iterator, hdr, ticks_per_half_distance);
 
     object_init_ex(return_value, php_HdrHistogram_Iterator_Percentile_ce);
