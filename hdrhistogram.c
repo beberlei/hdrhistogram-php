@@ -478,7 +478,7 @@ PHP_FUNCTION(hdr_add)
     hdra = php_hdrhistogram_histogram_from_object(Z_OBJ_P(a))->histogram;
     hdrb = php_hdrhistogram_histogram_from_object(Z_OBJ_P(b))->histogram;
 
-#ifdef HAVE_HDRHISTOGRAM_0_11_4
+#ifdef HAVE_HDR_HISTOGRAM_LOWEST_DISCERNIBLE_VALUE
     res = hdr_init(hdra->lowest_discernible_value, hdra->highest_trackable_value, hdra->significant_figures, &hdr_new);
 #else
     res = hdr_init(hdra->lowest_trackable_value, hdra->highest_trackable_value, hdra->significant_figures, &hdr_new);
@@ -625,7 +625,7 @@ PHP_FUNCTION(hdr_export)
     array_init(return_value);
 
 
-#ifdef HAVE_HDRHISTOGRAM_0_11_4
+#ifdef HAVE_HDR_HISTOGRAM_LOWEST_DISCERNIBLE_VALUE
     if (hdr->lowest_discernible_value > 1) {
         add_assoc_long(return_value, "ltv", hdr->lowest_discernible_value);
     }
