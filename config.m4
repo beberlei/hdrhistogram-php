@@ -1,5 +1,5 @@
 PHP_ARG_WITH(hdrhistogram,
-    [if to enable the "hdrhistogram" extension"],
+    [if to enable the "hdrhistogram" extension],
     [  --with-hdrhistogram[=DIR] Enable "hdrhistogram" extension support])
 
 if test "$PHP_HDRHISTOGRAM" != "no"; then
