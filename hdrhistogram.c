@@ -60,8 +60,15 @@ static void php_hdrhistogram_histogram_free(zend_object *object)
     zend_object_std_dtor(&histogram->std);
 }
 
+#if PHP_VERSION_ID < 80000
+static zend_object *php_hdrhistogram_histogram_clone(zval *zval)
+#else
 static zend_object *php_hdrhistogram_histogram_clone(zend_object *object)
+#endif
 {
+#if PHP_VERSION_ID < 80000
+    zend_object *object = Z_OBJ_P(zval);
+#endif
     struct php_hdrhistogram_histogram *old = php_hdrhistogram_histogram_from_object(object);
     struct php_hdrhistogram_histogram *new = php_hdrhistogram_histogram_from_object(old->std.ce->create_object(old->std.ce));
 
