@@ -3,14 +3,25 @@ PHP_ARG_WITH(hdrhistogram,
     [  --with-hdrhistogram[=DIR]    Enable "hdrhistogram" extension support])
 
 if test "$PHP_HDRHISTOGRAM" != "no"; then
+    PHP_ARG_WITH(hdrhistogram_static,
+        [whether libhdr_histogram should be linked statically],
+        [  --with-hdrhistogram-static
+                          Enable static linking of libhdr_histogram], no, no)
+
+    if test "$PHP_HDRHISTOGRAM_STATIC" = "yes"; then
+        LIBNAME=hdr_histogram_static
+    else
+        LIBNAME=hdr_histogram
+    fi
+
     AC_PATH_PROG(PKG_CONFIG, pkg-config, no)
 
-    if test "$PHP_HDRHISTOGRAM" = "yes" -a -x "$PKG_CONFIG" && $PKG_CONFIG --exists hdr_histogram; then
+    if test "$PHP_HDRHISTOGRAM" = "yes" -a -x "$PKG_CONFIG" && $PKG_CONFIG --exists $LIBNAME; then
 
         AC_MSG_CHECKING([for hdrhistogram from pkg-config])
-        LIBHDR_CFLAGS=`$PKG_CONFIG hdr_histogram --cflags`
-        LIBHDR_LIBDIR=`$PKG_CONFIG hdr_histogram --libs`
-        LIBHDR_VERSON=`$PKG_CONFIG hdr_histogram --modversion`
+        LIBHDR_CFLAGS=`$PKG_CONFIG $LIBNAME --cflags`
+        LIBHDR_LIBDIR=`$PKG_CONFIG $LIBNAME --libs`
+        LIBHDR_VERSON=`$PKG_CONFIG $LIBNAME --modversion`
         AC_MSG_RESULT(found $LIBHDR_VERSON)
         if $PKG_CONFIG hdr_histogram --atleast-version 0.11.7; then
             AC_DEFINE(HAVE_HDRHISTOGRAM_0_11_7,1,[ ])
@@ -43,17 +54,14 @@ if test "$PHP_HDRHISTOGRAM" != "no"; then
 
         PHP_ADD_INCLUDE($HDRHISTOGRAM_PATH/include)
 
-        LIBNAME=hdr_histogram
-        LIBSYMBOL=hdr_init
-
-        PHP_CHECK_LIBRARY($LIBNAME, $LIBSYMBOL,
+        AC_SEARCH_LIBS(hdr_init, $LIBNAME,
             [
                 PHP_ADD_LIBRARY_WITH_PATH($LIBNAME, $HDRHISTOGRAM_PATH/$PHP_LIBDIR, HDRHISTOGRAM_SHARED_LIBADD)
                 AC_DEFINE(HAVE_HDRHISTOGRAM,1,[ ])
             ],[
                 AC_MSG_ERROR([wrong hdrhistogram lib version or lib not found])
             ],[
-                -L$HDRHISTOGRAM_PATH/$PHP_LIBDIR
+                -L$HDRHISTOGRAM_PATH/$PHP_LIBDIR -lm
             ]
         )
     fi
