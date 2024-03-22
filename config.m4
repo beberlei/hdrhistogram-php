@@ -12,9 +12,6 @@ if test "$PHP_HDRHISTOGRAM" != "no"; then
         LIBHDR_LIBDIR=`$PKG_CONFIG hdr_histogram --libs`
         LIBHDR_VERSON=`$PKG_CONFIG hdr_histogram --modversion`
         AC_MSG_RESULT(found $LIBHDR_VERSON)
-        if $PKG_CONFIG hdr_histogram --atleast-version 0.11.7; then
-            AC_DEFINE(HAVE_HDRHISTOGRAM_0_11_7,1,[ ])
-        fi
         if $PKG_CONFIG hdr_histogram --atleast-version 0.11.4; then
             AC_DEFINE(HAVE_HDRHISTOGRAM_0_11_4,1,[ ])
         fi
@@ -56,6 +53,11 @@ if test "$PHP_HDRHISTOGRAM" != "no"; then
             ]
         )
     fi
+
+    old_CPPFLAGS=$CPPFLAGS
+    CPPFLAGS="$CPPFLAGS $INCLUDES"
+    AC_CHECK_HEADERS([hdr/hdr_histogram_version.h])
+    CPPFLAGS=$old_CPPFLAGS
 
     PHP_SUBST(HDRHISTOGRAM_SHARED_LIBADD)
 

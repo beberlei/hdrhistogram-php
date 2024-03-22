@@ -8,7 +8,7 @@
 #include "Zend/zend_interfaces.h"
 #include "hdr/hdr_histogram.h"
 #include "hdr/hdr_histogram_log.h"
-#ifdef HAVE_HDRHISTOGRAM_0_11_7
+#ifdef HAVE_HDR_HDR_HISTOGRAM_VERSION_H
 #include "hdr/hdr_histogram_version.h"
 #endif
 #include "php_hdrhistogram.h"
