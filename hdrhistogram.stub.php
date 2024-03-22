@@ -59,7 +59,7 @@ namespace HdrHistogram {
      * @not-serializable
      */
     final class Histogram {
-        public function __construct(int $lowest_trackable_value, int $highest_trackable_value, int $significant_figures) { }
+        public function __construct(int $lowestDiscernibleValue, int $highestTrackableValue, int $significantFigures) { }
     }
 
     /**
@@ -77,6 +77,6 @@ namespace HdrHistogram\Iterator {
      * @not-serializable
      */
     final class Percentile {
-        public function __construct(\HdrHistogram\Histogram $histogram) { }
+        public function __construct(\HdrHistogram\Histogram $histogram, int $ticksPerHalfDistance) { }
     }
 }

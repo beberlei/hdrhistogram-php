@@ -146,6 +146,8 @@ jobs:
 
         echo "version=$(php -dextension=.libs/hdrhistogram.so -r "echo phpversion('hdrhistogram');")" >> $GITHUB_OUTPUT
 
+        php -dextension=.libs/hdrhistogram.so -i
+
     - name: run-tests.php for hdrhistogram ${{ steps.hdrhistogram-version.outputs.version }}
       timeout-minutes: 5
       run: |
