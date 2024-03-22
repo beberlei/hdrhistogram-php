@@ -49,7 +49,6 @@ if test "$PHP_HDRHISTOGRAM" != "no"; then
         PHP_CHECK_LIBRARY($LIBNAME, $LIBSYMBOL,
             [
                 PHP_ADD_LIBRARY_WITH_PATH($LIBNAME, $HDRHISTOGRAM_PATH/$PHP_LIBDIR, HDRHISTOGRAM_SHARED_LIBADD)
-                AC_DEFINE(HAVE_HDRHISTOGRAM,1,[ ])
             ],[
                 AC_MSG_ERROR([wrong hdrhistogram lib version or lib not found])
             ],[
