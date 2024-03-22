@@ -9,7 +9,7 @@ permissions:
 
 jobs:
   Linux:
-    name: "${{ matrix.phpVersion }}, ${{ matrix.debug == 'sanitize' && 'Sanitizers' || (matrix.debug && 'Debug' || 'Release') }}, ${{ matrix.zts && 'ZTS' || 'NTS' }}, ${{ matrix.os }}"
+    name: "${{ matrix.phpVersion }}, ${{ matrix.debug == 'sanitize' && 'Sanitizers' || (matrix.debug && 'Debug' || 'Release') }}, ${{ matrix.zts && 'ZTS' || 'NTS' }}, ${{ matrix.static && 'Static' || 'Dynamic' }}, ${{ matrix.os }}"
     runs-on: ${{ matrix.os }}
 
     strategy:
@@ -20,46 +20,62 @@ jobs:
             os: ubuntu-22.04
             debug: true
             zts: false
+            static: false
           - phpVersion: "8.3"
             os: ubuntu-22.04
             debug: sanitize
             zts: false
+            static: false
           - phpVersion: "8.3"
             os: ubuntu-22.04
             debug: true
             zts: true
+            static: false
+          - phpVersion: "8.3"
+            os: ubuntu-22.04
+            debug: true
+            zts: false
+            static: true
           - phpVersion: "8.2"
             os: ubuntu-22.04
             debug: true
             zts: false
+            static: false
           - phpVersion: "8.1"
             os: ubuntu-22.04
             debug: true
             zts: false
+            static: false
           - phpVersion: "8.0"
             os: ubuntu-20.04
             debug: true
             zts: false
+            static: false
           - phpVersion: "7.4"
             os: ubuntu-20.04
             debug: true
             zts: false
+            static: false
           - phpVersion: "7.3"
             os: ubuntu-20.04
             debug: true
             zts: false
+            static: false
           - phpVersion: "7.2"
             os: ubuntu-20.04
             debug: true
             zts: false
+            static: false
           - phpVersion: "7.1"
             os: ubuntu-20.04
             debug: true
             zts: false
+            static: false
           - phpVersion: "7.0"
             os: ubuntu-20.04
             debug: true
             zts: false
+            static: false
 
     steps:
     - uses: actions/checkout@v4
@@ -113,6 +129,7 @@ jobs:
       timeout-minutes: 1
       run: |
         ./configure \
+          ${{ matrix.static && '--with-hdrhistogram-static' || '' }} \
           ${{ matrix.debug == 'sanitize' && 'CFLAGS="-g -fsanitize=undefined,address -DZEND_TRACK_ARENA_ALLOC" LDFLAGS="-fsanitize=undefined,address" CC=clang-16 CXX=clang++-16' || 'CFLAGS="-g"' }}
 
     - name: make
