@@ -60,6 +60,37 @@ static void php_hdrhistogram_histogram_free(zend_object *object)
     zend_object_std_dtor(&histogram->std);
 }
 
+static zend_object *php_hdrhistogram_histogram_clone(zend_object *object)
+{
+    struct php_hdrhistogram_histogram *old = php_hdrhistogram_histogram_from_object(object);
+    struct php_hdrhistogram_histogram *new = php_hdrhistogram_histogram_from_object(old->std.ce->create_object(old->std.ce));
+
+    struct hdr_histogram *hdr_new;
+    int res;
+
+#ifdef HAVE_HDRHISTOGRAM_0_11_4
+    res = hdr_init(old->histogram->lowest_discernible_value, old->histogram->highest_trackable_value, old->histogram->significant_figures, &hdr_new);
+#else
+    res = hdr_init(old->histogram->lowest_trackable_value, old->histogram->highest_trackable_value, old->histogram->significant_figures, &hdr_new);
+#endif
+
+    if (res != 0) {
+        zend_throw_error(zend_ce_error, "Unable to initialize HdrHistogram.");
+        return NULL;
+    }
+
+    new->histogram = hdr_new;
+
+    int64_t dropped = hdr_add(new->histogram, old->histogram);
+    ZEND_ASSERT(dropped == 0);
+    if (dropped != 0) {
+        zend_throw_error(zend_ce_error, "Unable to transfer values from old histogram.");
+        return NULL;
+    }
+
+    return &new->std;
+}
+
 static zend_class_entry *php_HdrHistogram_Iterator_ce;
 static zend_object_handlers php_hdrhistogram_iterator_object_handlers;
 
@@ -125,7 +156,7 @@ PHP_MINIT_FUNCTION(hdrhistogram)
     memcpy(&php_hdrhistogram_histogram_object_handlers, zend_get_std_object_handlers(), sizeof(zend_object_handlers));
     php_hdrhistogram_histogram_object_handlers.offset = XtOffsetOf(struct php_hdrhistogram_histogram, std);
     php_hdrhistogram_histogram_object_handlers.free_obj = php_hdrhistogram_histogram_free;
-    php_hdrhistogram_histogram_object_handlers.clone_obj = NULL;
+    php_hdrhistogram_histogram_object_handlers.clone_obj = php_hdrhistogram_histogram_clone;
 #if PHP_VERSION_ID < 80100
     php_HdrHistogram_Histogram_ce->serialize    = zend_class_serialize_deny;
     php_HdrHistogram_Histogram_ce->unserialize  = zend_class_unserialize_deny;
