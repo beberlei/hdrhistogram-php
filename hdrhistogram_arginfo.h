@@ -1,5 +1,5 @@
 /* This is a generated file, edit the .stub.php file instead.
- * Stub hash: ad32d9ddee3742f596783ac0beeab9929583ae12 */
+ * Stub hash: 4e91058eaa9a3defd0e052aa081bb9c4d8ea7b12 */
 
 ZEND_BEGIN_ARG_WITH_RETURN_OBJ_TYPE_MASK_EX(arginfo_hdr_init, 0, 3, HdrHistogram\\Histogram, MAY_BE_FALSE)
 	ZEND_ARG_TYPE_INFO(0, lowest_trackable_value, IS_LONG, 0)
@@ -28,11 +28,11 @@ ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_hdr_record_corrected_value, 0, 3
 	ZEND_ARG_TYPE_INFO(0, expected_interval, IS_LONG, 0)
 ZEND_END_ARG_INFO()
 
-#define arginfo_hdr_mean arginfo_hdr_get_memory_size
-
-ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_hdr_stddev, 0, 1, IS_DOUBLE, 0)
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_hdr_mean, 0, 1, IS_DOUBLE, 0)
 	ZEND_ARG_OBJ_INFO(0, hdr, HdrHistogram\\Histogram, 0)
 ZEND_END_ARG_INFO()
+
+#define arginfo_hdr_stddev arginfo_hdr_mean
 
 #define arginfo_hdr_min arginfo_hdr_get_memory_size
 

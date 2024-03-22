@@ -16,7 +16,7 @@ namespace {
 
     function hdr_record_corrected_value(\HdrHistogram\Histogram $hdr, int $value, int $expected_interval): bool {};
 
-    function hdr_mean(\HdrHistogram\Histogram $hdr): int {};
+    function hdr_mean(\HdrHistogram\Histogram $hdr): float {};
 
     function hdr_stddev(\HdrHistogram\Histogram $hdr): float {};
 

@@ -8,9 +8,6 @@ extern zend_module_entry hdrhistogram_module_entry;
 #define PHP_HDR_HISTOGRAM_VERSION "0.4.2"
 
 PHP_MINIT_FUNCTION(hdrhistogram);
-PHP_MSHUTDOWN_FUNCTION(hdrhistogram);
-PHP_RINIT_FUNCTION(hdrhistogram);
-PHP_RSHUTDOWN_FUNCTION(hdrhistogram);
 PHP_MINFO_FUNCTION(hdrhistogram);
 
 PHP_FUNCTION(hdr_init);

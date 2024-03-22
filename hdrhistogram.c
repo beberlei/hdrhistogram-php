@@ -36,7 +36,7 @@ static inline struct php_hdrhistogram_histogram *php_hdrhistogram_histogram_from
 static zend_object *php_hdrhistogram_histogram_new(zend_class_entry *ce)
 {
     struct php_hdrhistogram_histogram *histogram;
-#if PHP_VERSION_ID >= 80000
+#if PHP_VERSION_ID >= 70300
     histogram = zend_object_alloc(sizeof(struct php_hdrhistogram_histogram), ce);
 #else
     histogram = ecalloc(1, sizeof(struct php_hdrhistogram_histogram) + sizeof(zval) * (ce->default_properties_count - 1));
@@ -75,7 +75,7 @@ static inline struct php_hdrhistogram_iterator *php_hdrhistogram_iterator_from_o
 static zend_object *php_hdrhistogram_iterator_new(zend_class_entry *ce)
 {
     struct php_hdrhistogram_iterator *iterator;
-#if PHP_VERSION_ID >= 80000
+#if PHP_VERSION_ID >= 70300
     iterator = zend_object_alloc(sizeof(struct php_hdrhistogram_iterator), ce);
 #else
     iterator = ecalloc(1, sizeof(struct php_hdrhistogram_iterator) + sizeof(zval) * (ce->default_properties_count - 1));
@@ -294,7 +294,7 @@ PHP_FUNCTION(hdr_mean)
 
     hdr = php_hdrhistogram_histogram_from_object(Z_OBJ_P(zhdr))->histogram;
 
-    RETURN_LONG(hdr_mean(hdr));
+    RETURN_DOUBLE(hdr_mean(hdr));
 }
 
 PHP_FUNCTION(hdr_stddev)
