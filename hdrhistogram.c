@@ -8,7 +8,7 @@
 #include "Zend/zend_interfaces.h"
 #include "hdr/hdr_histogram.h"
 #include "hdr/hdr_histogram_log.h"
-#ifdef HAVE_HDRHISTOGRAM_0_11_7
+#ifdef HAVE_HDR_HDR_HISTOGRAM_VERSION_H
 #include "hdr/hdr_histogram_version.h"
 #endif
 #include "php_hdrhistogram.h"
@@ -75,7 +75,7 @@ static zend_object *php_hdrhistogram_histogram_clone(zend_object *object)
     struct hdr_histogram *hdr_new;
     int res;
 
-#ifdef HAVE_HDRHISTOGRAM_0_11_4
+#ifdef HAVE_HDR_HISTOGRAM_LOWEST_DISCERNIBLE_VALUE
     res = hdr_init(old->histogram->lowest_discernible_value, old->histogram->highest_trackable_value, old->histogram->significant_figures, &hdr_new);
 #else
     res = hdr_init(old->histogram->lowest_trackable_value, old->histogram->highest_trackable_value, old->histogram->significant_figures, &hdr_new);
@@ -498,7 +498,7 @@ PHP_FUNCTION(hdr_add)
     struct hdr_histogram *hdr_new;
 
     int res;
-#ifdef HAVE_HDRHISTOGRAM_0_11_4
+#ifdef HAVE_HDR_HISTOGRAM_LOWEST_DISCERNIBLE_VALUE
     res = hdr_init(hdra->lowest_discernible_value, hdra->highest_trackable_value, hdra->significant_figures, &hdr_new);
 #else
     res = hdr_init(hdra->lowest_trackable_value, hdra->highest_trackable_value, hdra->significant_figures, &hdr_new);
@@ -632,7 +632,7 @@ PHP_FUNCTION(hdr_export)
 
     array_init(return_value);
 
-#ifdef HAVE_HDRHISTOGRAM_0_11_4
+#ifdef HAVE_HDR_HISTOGRAM_LOWEST_DISCERNIBLE_VALUE
     if (hdr->lowest_discernible_value > 1) {
         add_assoc_long(return_value, "ltv", hdr->lowest_discernible_value);
     }

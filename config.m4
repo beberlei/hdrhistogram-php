@@ -1,6 +1,6 @@
 PHP_ARG_WITH(hdrhistogram,
-    [if to enable the "hdrhistogram" extension"],
-    [  --with-hdrhistogram[=DIR]    Enable "hdrhistogram" extension support])
+    [if to enable the "hdrhistogram" extension],
+    [  --with-hdrhistogram[=DIR] Enable "hdrhistogram" extension support])
 
 if test "$PHP_HDRHISTOGRAM" != "no"; then
     AC_PATH_PROG(PKG_CONFIG, pkg-config, no)
@@ -12,12 +12,6 @@ if test "$PHP_HDRHISTOGRAM" != "no"; then
         LIBHDR_LIBDIR=`$PKG_CONFIG hdr_histogram --libs`
         LIBHDR_VERSON=`$PKG_CONFIG hdr_histogram --modversion`
         AC_MSG_RESULT(found $LIBHDR_VERSON)
-        if $PKG_CONFIG hdr_histogram --atleast-version 0.11.7; then
-            AC_DEFINE(HAVE_HDRHISTOGRAM_0_11_7,1,[ ])
-        fi
-        if $PKG_CONFIG hdr_histogram --atleast-version 0.11.4; then
-            AC_DEFINE(HAVE_HDRHISTOGRAM_0_11_4,1,[ ])
-        fi
         PHP_EVAL_LIBLINE($LIBHDR_LIBDIR, HDRHISTOGRAM_SHARED_LIBADD)
         PHP_EVAL_INCLINE($LIBHDR_CFLAGS)
     else
@@ -49,7 +43,6 @@ if test "$PHP_HDRHISTOGRAM" != "no"; then
         PHP_CHECK_LIBRARY($LIBNAME, $LIBSYMBOL,
             [
                 PHP_ADD_LIBRARY_WITH_PATH($LIBNAME, $HDRHISTOGRAM_PATH/$PHP_LIBDIR, HDRHISTOGRAM_SHARED_LIBADD)
-                AC_DEFINE(HAVE_HDRHISTOGRAM,1,[ ])
             ],[
                 AC_MSG_ERROR([wrong hdrhistogram lib version or lib not found])
             ],[
@@ -57,6 +50,18 @@ if test "$PHP_HDRHISTOGRAM" != "no"; then
             ]
         )
     fi
+
+    old_CPPFLAGS=$CPPFLAGS
+    CPPFLAGS="$CPPFLAGS $INCLUDES"
+    AC_CHECK_HEADERS([hdr/hdr_histogram_version.h])
+    CPPFLAGS=$old_CPPFLAGS
+
+    old_CPPFLAGS=$CPPFLAGS
+    CPPFLAGS="$CPPFLAGS $INCLUDES"
+    AC_CHECK_MEMBER([struct hdr_histogram.lowest_discernible_value], [
+        AC_DEFINE(HAVE_HDR_HISTOGRAM_LOWEST_DISCERNIBLE_VALUE, 1, [ ])
+    ], [], [#include "hdr/hdr_histogram.h"])
+    CPPFLAGS=$old_CPPFLAGS
 
     PHP_SUBST(HDRHISTOGRAM_SHARED_LIBADD)
 
