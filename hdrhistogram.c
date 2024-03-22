@@ -613,8 +613,8 @@ PHP_FUNCTION(hdr_export)
     zval values;
     int32_t i;
     struct hdr_histogram *hdr;
-    int found = 0;
-    long skipped = 0;
+    int64_t found = 0;
+    zend_long skipped = 0;
 
     ZEND_PARSE_PARAMETERS_START(1, 1)
         Z_PARAM_OBJECT_OF_CLASS(zhdr, php_HdrHistogram_Histogram_ce);
@@ -654,7 +654,7 @@ PHP_FUNCTION(hdr_export)
                 add_next_index_long(&values, skipped);
                 skipped = 0;
             }
-            add_next_index_long(&values, (long)hdr->counts[i]);
+            add_next_index_long(&values, (zend_long)hdr->counts[i]);
         }
 
         found += hdr->counts[i];
