@@ -242,7 +242,7 @@ ZEND_METHOD(HdrHistogram_Iterator_Percentile, __construct)
 PHP_FUNCTION(hdr_init)
 {
     struct hdr_histogram *hdr;
-    long lowest_discernible_value, highest_trackable_value, significant_figures;
+    zend_long lowest_discernible_value, highest_trackable_value, significant_figures;
     int res;
 
     if (zend_parse_parameters(ZEND_NUM_ARGS(), "lll",
