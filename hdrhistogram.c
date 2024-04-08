@@ -55,7 +55,9 @@ static void php_hdrhistogram_histogram_free(zend_object *object)
 {
     struct php_hdrhistogram_histogram *histogram = php_hdrhistogram_histogram_from_object(object);
 
-    hdr_close(histogram->histogram);
+    if (histogram->histogram) {
+        hdr_close(histogram->histogram);
+    }
 
     zend_object_std_dtor(&histogram->std);
 }
