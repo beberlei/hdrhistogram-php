@@ -14,7 +14,7 @@ A Histogram that supports recording and analyzing sampled data value counts acro
 
 ## Installation
 
-This extension depends on HdrHistogram C API, you can install it easily:
+This extension depends on HdrHistogram C API (version 0.9.8 or higher), you can install it easily:
 
     $ git clone git@github.com:HdrHistogram/HdrHistogram_c
     $ cd HdrHistogram_c
