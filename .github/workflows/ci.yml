@@ -9,7 +9,7 @@ permissions:
 
 jobs:
   Linux:
-    name: "${{ matrix.phpVersion }}, ${{ matrix.debug == 'sanitize' && 'Sanitizers' || (matrix.debug && 'Debug' || 'Release') }}, ${{ matrix.zts && 'ZTS' || 'NTS' }}, ${{ matrix.static && 'Static' || 'Dynamic' }}, ${{ matrix.os }}"
+    name: "${{ matrix.phpVersion }}, HDR ${{ matrix.hdrVersion }}, ${{ matrix.debug == 'sanitize' && 'Sanitizers' || (matrix.debug && 'Debug' || 'Release') }}, ${{ matrix.zts && 'ZTS' || 'NTS' }}, ${{ matrix.static && 'Static' || 'Dynamic' }}, ${{ matrix.os }}"
     runs-on: ${{ matrix.os }}
 
     strategy:
@@ -17,61 +17,85 @@ jobs:
       matrix:
         include:
           - phpVersion: "8.3"
+            hdrVersion: main
             os: ubuntu-22.04
             debug: true
             zts: false
             static: false
           - phpVersion: "8.3"
+            hdrVersion: main
             os: ubuntu-22.04
             debug: sanitize
             zts: false
             static: false
           - phpVersion: "8.3"
+            hdrVersion: main
             os: ubuntu-22.04
             debug: true
             zts: true
             static: false
           - phpVersion: "8.3"
+            hdrVersion: main
             os: ubuntu-22.04
             debug: true
             zts: false
             static: true
+          - phpVersion: "8.3"
+            hdrVersion: "0.9.8"
+            os: ubuntu-22.04
+            debug: true
+            zts: false
+            static: false
           - phpVersion: "8.2"
+            hdrVersion: main
             os: ubuntu-22.04
             debug: true
             zts: false
             static: false
           - phpVersion: "8.1"
+            hdrVersion: main
             os: ubuntu-22.04
             debug: true
             zts: false
             static: false
           - phpVersion: "8.0"
+            hdrVersion: main
             os: ubuntu-20.04
             debug: true
             zts: false
             static: false
           - phpVersion: "7.4"
+            hdrVersion: main
             os: ubuntu-20.04
             debug: true
             zts: false
             static: false
           - phpVersion: "7.3"
+            hdrVersion: main
             os: ubuntu-20.04
             debug: true
             zts: false
             static: false
           - phpVersion: "7.2"
+            hdrVersion: main
             os: ubuntu-20.04
             debug: true
             zts: false
             static: false
           - phpVersion: "7.1"
+            hdrVersion: main
             os: ubuntu-20.04
             debug: true
             zts: false
             static: false
           - phpVersion: "7.0"
+            hdrVersion: main
+            os: ubuntu-20.04
+            debug: true
+            zts: false
+            static: false
+          - phpVersion: "7.0"
+            hdrVersion: "0.9.8"
             os: ubuntu-20.04
             debug: true
             zts: false
@@ -106,6 +130,7 @@ jobs:
       uses: ./.github/actions/install-hdrhistogram-c
       with:
         type: ${{ matrix.debug == 'sanitize' && 'sanitize' || (matrix.debug && 'debug' || 'release') }}
+        version: ${{ matrix.hdrVersion }}
 
     - name: Add our PHP to the PATH
       run: |
