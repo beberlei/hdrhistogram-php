@@ -220,6 +220,24 @@ ZEND_METHOD(HdrHistogram_Histogram, __construct)
         return;
     }
 
+    if (highest_trackable_value < lowest_discernible_value * 2) {
+#if PHP_VERSION_ID >= 80000
+        zend_argument_value_error(2, "must be greater than or equal to twice the value of argument #%d ($%s)", 1, "lowestDiscernibleValue");
+#else
+        zend_throw_exception_ex(NULL, 0, "%s(): Argument #%d ($%s) must be greater than or equal to twice the value of argument #%d ($%s)", "HdrHistogram\\Histogram::__construct", 2, "highestTrackableValue", 1, "lowestDiscernibleValue");
+#endif
+        return;
+    }
+
+    if (significant_figures < 1 || significant_figures > 5) {
+#if PHP_VERSION_ID >= 80000
+        zend_argument_value_error(3, "must be between 1 and 5");
+#else
+        zend_throw_exception_ex(NULL, 0, "%s(): Argument #%d ($%s) must be between 1 and 5", "HdrHistogram\\Histogram::__construct", 3, "significantFigures");
+#endif
+        return;
+    }
+
     struct php_hdrhistogram_histogram *h = php_hdrhistogram_histogram_from_object(Z_OBJ_P(getThis()));
 
     struct hdr_histogram *hdr;
