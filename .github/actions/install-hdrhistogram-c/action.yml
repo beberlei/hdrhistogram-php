@@ -13,6 +13,6 @@ runs:
     - shell: bash
       working-directory: ./HdrHistogram_c/
       run: |
-        env ${{ inputs.type == 'sanitize' && 'CFLAGS="-g -O0 -fsanitize=undefined,address -DZEND_TRACK_ARENA_ALLOC" LDFLAGS="-fsanitize=undefined,address" CC=clang-16 CXX=clang++-16' || 'CFLAGS="-g -O0"' }} cmake .
+        env ${{ inputs.type == 'sanitize' && 'CFLAGS="-g -O0 -fsanitize=undefined,address -DZEND_TRACK_ARENA_ALLOC" LDFLAGS="-fsanitize=undefined,address" CC=clang-16 CXX=clang++-16' || (inputs.type == 'debug' && 'CFLAGS="-g -O0"' || 'CFLAGS="-g -O2"') }} cmake .
         make VERBOSE=1
         sudo make install
