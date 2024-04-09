@@ -2,6 +2,8 @@ name: Install HdrHistogram_c
 inputs:
   type:
     required: true
+  version:
+    required: true
 runs:
   using: composite
   steps:
@@ -9,6 +11,7 @@ runs:
       with:
         repository: HdrHistogram/HdrHistogram_c
         path: HdrHistogram_c
+        ref: ${{ inputs.version }}
 
     - shell: bash
       working-directory: ./HdrHistogram_c/
