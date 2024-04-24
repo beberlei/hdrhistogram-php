@@ -673,7 +673,8 @@ PHP_FUNCTION(hdr_export)
 
     int64_t found = 0;
     zend_long skipped = 0;
-    for (int32_t i = 0; i < hdr->counts_len; i++) {
+    int32_t i;
+    for (i = 0; i < hdr->counts_len; i++) {
         if (found >= hdr->total_count) {
             break;
         }
