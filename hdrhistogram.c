@@ -673,7 +673,8 @@ PHP_FUNCTION(hdr_export)
 
     int64_t found = 0;
     zend_long skipped = 0;
-    for (int32_t i = 0; i < hdr->counts_len; i++) {
+    int32_t i;
+    for (i = 0; i < hdr->counts_len; i++) {
         if (found >= hdr->total_count) {
             break;
         }
@@ -774,6 +775,7 @@ PHP_FUNCTION(hdr_import)
         zend_ulong num_key;
         int bucket = 0;
         ZEND_HASH_FOREACH_KEY_VAL(Z_ARRVAL_P(value), num_key, key, item) {
+            (void)num_key;
             if (!key && bucket < hdr->counts_len) {
                 convert_to_long_ex(item);
                 if (Z_LVAL_P(item) > 0) {
