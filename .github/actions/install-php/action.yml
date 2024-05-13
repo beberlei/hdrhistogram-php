@@ -16,6 +16,15 @@ runs:
       shell: bash
       run: sudo apt-get update
 
+    - name: Install runtime libraries
+      shell: bash
+      run: |
+        sudo apt-get install -y \
+          libmcrypt4 \
+          libmemcached11 \
+          librabbitmq4 \
+          librdkafka1
+
     - name: Determine PHP version
       id: determine-php-version
       shell: bash
