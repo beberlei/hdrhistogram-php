@@ -16,6 +16,12 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          - phpVersion: "8.4-dev"
+            hdrVersion: main
+            os: ubuntu-22.04
+            debug: true
+            zts: false
+            static: false
           - phpVersion: "8.3"
             hdrVersion: main
             os: ubuntu-22.04

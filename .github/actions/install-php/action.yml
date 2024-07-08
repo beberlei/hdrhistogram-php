@@ -33,9 +33,15 @@ runs:
         if ! command -v jq > /dev/null; then
           sudo apt-get install -y jq
         fi
-        curl -fsSL "https://www.php.net/releases/index.php?json&max=1&version=${{ inputs.version }}" -o version.json
-        echo version="$(cat version.json |jq -r 'keys[0]')" >> $GITHUB_OUTPUT
-        echo archive="$(cat version.json |jq -r '.[] .source[] |select(.filename |endswith(".gz")) |"https://www.php.net/distributions/" + .filename')" >> $GITHUB_OUTPUT
+        if [[ "${{ inputs.version }}" = *-dev ]]; then
+          curl -fsSL "https://qa.php.net/api.php?type=qa-releases&format=json" -o version.json
+          echo version="$(cat version.json |jq -r --arg version "${{ inputs.version }}" '.releases[] |select(.version |startswith($version |sub("-dev"; "."))).version')" >> $GITHUB_OUTPUT
+          echo archive="$(cat version.json |jq -r --arg version "${{ inputs.version }}" '.releases[] |select(.version |startswith($version |sub("-dev"; "."))).files.gz.path')" >> $GITHUB_OUTPUT
+        else
+          curl -fsSL "https://www.php.net/releases/index.php?json&max=1&version=${{ inputs.version }}" -o version.json
+          echo version="$(cat version.json |jq -r 'keys[0]')" >> $GITHUB_OUTPUT
+          echo archive="$(cat version.json |jq -r '.[] .source[] |select(.filename |endswith(".gz")) |"https://www.php.net/distributions/" + .filename')" >> $GITHUB_OUTPUT
+        fi
 
     - name: Cache PHP
       id: cache-php
