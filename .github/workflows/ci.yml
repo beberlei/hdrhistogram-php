@@ -18,49 +18,49 @@ jobs:
         include:
           - phpVersion: "8.4-dev"
             hdrVersion: main
-            os: ubuntu-22.04
+            os: ubuntu-24.04
             debug: true
             zts: false
             static: false
           - phpVersion: "8.3"
             hdrVersion: main
-            os: ubuntu-22.04
+            os: ubuntu-24.04
             debug: true
             zts: false
             static: false
           - phpVersion: "8.3"
             hdrVersion: main
-            os: ubuntu-22.04
+            os: ubuntu-24.04
             debug: sanitize
             zts: false
             static: false
           - phpVersion: "8.3"
             hdrVersion: main
-            os: ubuntu-22.04
+            os: ubuntu-24.04
             debug: true
             zts: true
             static: false
           - phpVersion: "8.3"
             hdrVersion: main
-            os: ubuntu-22.04
+            os: ubuntu-24.04
             debug: true
             zts: false
             static: true
           - phpVersion: "8.3"
             hdrVersion: "0.9.8"
-            os: ubuntu-22.04
+            os: ubuntu-24.04
             debug: true
             zts: false
             static: false
           - phpVersion: "8.2"
             hdrVersion: main
-            os: ubuntu-22.04
+            os: ubuntu-24.04
             debug: true
             zts: false
             static: false
           - phpVersion: "8.1"
             hdrVersion: main
-            os: ubuntu-22.04
+            os: ubuntu-24.04
             debug: true
             zts: false
             static: false
@@ -114,13 +114,6 @@ jobs:
       if: ${{ matrix.debug == 'sanitize' }}
       # https://github.com/actions/runner-images/issues/9491
       run: sudo sysctl vm.mmap_rnd_bits=28
-
-    - name: LLVM 16 (ASAN)
-      if: ${{ matrix.debug == 'sanitize' }}
-      run: |
-        wget https://apt.llvm.org/llvm.sh
-        chmod u+x llvm.sh
-        sudo ./llvm.sh 16
 
     - name: Install PHP
       id: install-php
