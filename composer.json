@@ -1,0 +1,24 @@
+{
+	"name": "beberlei/hdrhistogram-php",
+	"type": "php-ext",
+	"license": "BSD-2",
+	"description": "A PHP extension wrapper for the C hdrhistogram API.",
+	"require": {
+		"php": ">=7.0,<8.5"
+	},
+	"php-ext": {
+		"extension-name": "ext-hdrhistogram",
+		"priority": 20,
+		"configure-options": [
+			{
+				"name": "with-hdrhistogram",
+				"description": "Enable \"hdrhistogram\" extension support",
+				"needs-value": true
+			},
+			{
+				"name": "with-hdrhistogram-static",
+				"description": "Enable static linking of libhdr_histogram"
+			}
+		]
+	}
+}
