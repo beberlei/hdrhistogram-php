@@ -19,8 +19,6 @@
 #include "hdrhistogram_arginfo.h"
 #endif
 
-#define PHP_HDRHISTOGRAM_DESCRIPTOR_RES_NAME "hdr_histogram"
-
 static zend_class_entry *php_HdrHistogram_Histogram_ce;
 static zend_object_handlers php_hdrhistogram_histogram_object_handlers;
 
