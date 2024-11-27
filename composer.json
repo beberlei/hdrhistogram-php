@@ -1,5 +1,5 @@
 {
-	"name": "beberlei/hdrhistogram-php",
+	"name": "beberlei/hdrhistogram",
 	"type": "php-ext",
 	"license": "BSD-2",
 	"description": "A PHP extension wrapper for the C hdrhistogram API.",
