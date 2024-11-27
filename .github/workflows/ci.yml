@@ -22,32 +22,32 @@ jobs:
             debug: true
             zts: false
             static: false
-          - phpVersion: "8.3"
-            hdrVersion: main
-            os: ubuntu-24.04
-            debug: true
-            zts: false
-            static: false
-          - phpVersion: "8.3"
+          - phpVersion: "8.4"
             hdrVersion: main
             os: ubuntu-24.04
             debug: sanitize
             zts: false
             static: false
-          - phpVersion: "8.3"
+          - phpVersion: "8.4"
             hdrVersion: main
             os: ubuntu-24.04
             debug: true
             zts: true
             static: false
-          - phpVersion: "8.3"
+          - phpVersion: "8.4"
             hdrVersion: main
             os: ubuntu-24.04
             debug: true
             zts: false
             static: true
-          - phpVersion: "8.3"
+          - phpVersion: "8.4"
             hdrVersion: "0.9.8"
+            os: ubuntu-24.04
+            debug: true
+            zts: false
+            static: false
+          - phpVersion: "8.3"
+            hdrVersion: main
             os: ubuntu-24.04
             debug: true
             zts: false
