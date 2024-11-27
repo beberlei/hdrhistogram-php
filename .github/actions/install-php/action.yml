@@ -23,7 +23,8 @@ runs:
           libmcrypt4 \
           libmemcached11 \
           librabbitmq4 \
-          librdkafka1
+          librdkafka1 \
+          '?name(^libzip[0-9]+$)'
 
     - name: Determine PHP version
       id: determine-php-version
@@ -78,6 +79,7 @@ runs:
           libsqlite3-dev \
           libssl-dev \
           libxml2-dev \
+          libzip-dev \
           zlib1g-dev
 
     - if: steps.cache-php.outputs.cache-hit != 'true'
@@ -88,6 +90,11 @@ runs:
           zts='--enable-zts'
         else
           zts='--enable-maintainer-zts'
+        fi
+        if dpkg --compare-versions "${{ steps.determine-php-version.outputs.version }}" ge 7.4.0; then
+          zip='--with-zip'
+        else
+          zip='--enable-zip'
         fi
 
         ./configure \
@@ -104,6 +111,7 @@ runs:
           --with-mysqli \
           --with-openssl \
           --with-pdo-mysql \
+          $zip \
           --with-zlib
 
     - if: steps.cache-php.outputs.cache-hit != 'true'
