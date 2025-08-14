@@ -133,3 +133,25 @@ runs:
       working-directory: ./php/
       run: |
         make install
+
+    - if: ${{ steps.cache-php.outputs.cache-hit != 'true' }}
+      shell: bash
+      working-directory: ./php/
+      run: |
+        gh release --repo php/pie download --pattern pie.phar
+        gh attestation verify --repo php/pie pie.phar
+        mv pie.phar $(pwd)/target/bin/pie
+        chmod +x $(pwd)/target/bin/pie
+      env:
+        GH_TOKEN: ${{ github.token }}
+
+    - if: ${{ steps.cache-php.outputs.cache-hit != 'true' }}
+      shell: bash
+      working-directory: ./php/
+      run: |
+        gh release --repo composer/composer download --pattern composer.phar
+        gh attestation verify --repo composer/composer composer.phar
+        mv composer.phar $(pwd)/target/bin/composer
+        chmod +x $(pwd)/target/bin/composer
+      env:
+        GH_TOKEN: ${{ github.token }}
