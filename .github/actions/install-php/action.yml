@@ -54,19 +54,19 @@ runs:
         path: php/target/
         key: php-${{ inputs.type == 'sanitize' && 'sanitizers' || (inputs.type == 'debug' && 'debug' || 'release') }}-${{ inputs.zts == 'zts' && 'zts' || 'nts' }}-${{ runner.arch }}-${{ steps.determine-php-version.outputs.version }}
 
-    - if: steps.cache-php.outputs.cache-hit != 'true'
+    - if: ${{ steps.cache-php.outputs.cache-hit != 'true' }}
       shell: bash
       run: mkdir php/
 
-    - if: steps.cache-php.outputs.cache-hit != 'true'
+    - if: ${{ steps.cache-php.outputs.cache-hit != 'true' }}
       shell: bash
       run: sudo apt-get remove --purge --autoremove 'php*-*' 'libmemcached*'
 
-    - if: steps.cache-php.outputs.cache-hit != 'true'
+    - if: ${{ steps.cache-php.outputs.cache-hit != 'true' }}
       shell: bash
       run: curl -fsSL "${{ steps.determine-php-version.outputs.archive }}" |tar xz -C php --strip-components=1
     
-    - if: steps.cache-php.outputs.cache-hit != 'true'
+    - if: ${{ steps.cache-php.outputs.cache-hit != 'true' }}
       shell: bash
       run: |
         sudo apt-get install -y \
@@ -82,7 +82,7 @@ runs:
           libzip-dev \
           zlib1g-dev
 
-    - if: steps.cache-php.outputs.cache-hit != 'true'
+    - if: ${{ steps.cache-php.outputs.cache-hit != 'true' }}
       shell: bash
       working-directory: ./php/
       run: |
@@ -114,13 +114,13 @@ runs:
           $zip \
           --with-zlib
 
-    - if: steps.cache-php.outputs.cache-hit != 'true'
+    - if: ${{ steps.cache-php.outputs.cache-hit != 'true' }}
       shell: bash
       working-directory: ./php/
       run: |
         make -j$(getconf _NPROCESSORS_ONLN)
 
-    - if: steps.cache-php.outputs.cache-hit != 'true'
+    - if: ${{ steps.cache-php.outputs.cache-hit != 'true' }}
       shell: bash
       working-directory: ./php/
       run: |
