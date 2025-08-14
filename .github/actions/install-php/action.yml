@@ -47,12 +47,20 @@ runs:
         printf "version=%s\n" "$version" >> $GITHUB_OUTPUT
         printf "archive=%s\n" "$archive" >> $GITHUB_OUTPUT
 
+    - name: Determine Ubuntu version
+      id: determine-ubuntu-version
+      shell: bash
+      run: |
+        set -ex
+        # No quotes around the subshell, because we want word-splitting.
+        printf "version=%s-%s\n" $(lsb_release --short --release --id 2>/dev/null) >> $GITHUB_OUTPUT
+
     - name: Cache PHP
       id: cache-php
       uses: actions/cache@v4
       with:
         path: php/target/
-        key: php-${{ inputs.type == 'sanitize' && 'sanitizers' || (inputs.type == 'debug' && 'debug' || 'release') }}-${{ inputs.zts == 'zts' && 'zts' || 'nts' }}-${{ runner.arch }}-${{ steps.determine-php-version.outputs.version }}
+        key: php-${{ inputs.type == 'sanitize' && 'sanitizers' || (inputs.type == 'debug' && 'debug' || 'release') }}-${{ inputs.zts == 'zts' && 'zts' || 'nts' }}-${{ runner.arch }}-${{ steps.determine-php-version.outputs.version }}-${{ steps.determine-ubuntu-version.outputs.version }}-${{ hashFiles('**/.github/actions/install-php/**/*') }}
 
     - if: ${{ steps.cache-php.outputs.cache-hit != 'true' }}
       shell: bash
