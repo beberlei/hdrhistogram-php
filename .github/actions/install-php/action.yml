@@ -35,7 +35,7 @@ runs:
           sudo apt-get install -y jq
         fi
         if [[ "${{ inputs.version }}" = *-dev ]]; then
-          curl -fsSL "https://qa.php.net/api.php?type=qa-releases&format=json" -o version.json
+          curl -fsSL "https://www.php.net/release-candidates.php?format=json" -o version.json
           version="$(cat version.json |jq -r --arg version "${{ inputs.version }}" '.releases[] |select(.version |startswith($version |sub("-dev"; "."))).version')"
           archive="$(cat version.json |jq -r --arg version "${{ inputs.version }}" '.releases[] |select(.version |startswith($version |sub("-dev"; "."))).files.gz.path')"
         else
