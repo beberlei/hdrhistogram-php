@@ -20,6 +20,7 @@ runs:
       shell: bash
       run: |
         sudo apt-get install -y \
+          '?and(?name(^libicu[0-9]+$),?source-package(icu))' \
           libmcrypt4 \
           libmemcached11 \
           librabbitmq4 \
@@ -81,6 +82,7 @@ runs:
           libcurl4-openssl-dev \
           libmcrypt-dev \
           libmemcached-dev \
+          libicu-dev \
           libonig-dev \
           librabbitmq-dev \
           librdkafka-dev \
