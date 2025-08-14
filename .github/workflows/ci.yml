@@ -66,43 +66,43 @@ jobs:
             static: false
           - phpVersion: "8.0"
             hdrVersion: main
-            os: ubuntu-20.04
+            os: ubuntu-24.04
             debug: true
             zts: false
             static: false
           - phpVersion: "7.4"
             hdrVersion: main
-            os: ubuntu-20.04
+            os: ubuntu-24.04
             debug: true
             zts: false
             static: false
           - phpVersion: "7.3"
             hdrVersion: main
-            os: ubuntu-20.04
+            os: ubuntu-24.04
             debug: true
             zts: false
             static: false
           - phpVersion: "7.2"
             hdrVersion: main
-            os: ubuntu-20.04
+            os: ubuntu-24.04
             debug: true
             zts: false
             static: false
           - phpVersion: "7.1"
             hdrVersion: main
-            os: ubuntu-20.04
+            os: ubuntu-24.04
             debug: true
             zts: false
             static: false
           - phpVersion: "7.0"
             hdrVersion: main
-            os: ubuntu-20.04
+            os: ubuntu-24.04
             debug: true
             zts: false
             static: false
           - phpVersion: "7.0"
             hdrVersion: "0.9.8"
-            os: ubuntu-20.04
+            os: ubuntu-24.04
             debug: true
             zts: false
             static: false
