@@ -56,6 +56,33 @@ runs:
         # No quotes around the subshell, because we want word-splitting.
         printf "version=%s-%s\n" $(lsb_release --short --release --id 2>/dev/null) >> $GITHUB_OUTPUT
 
+    - name: Download OpenSSL 1.1 packages
+      shell: bash
+      run: |
+        if dpkg --compare-versions "${{ steps.determine-php-version.outputs.version }}" lt 8.1.0; then
+          curl -fL --max-time 30 -O http://security.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.1_1.1.1f-1ubuntu2.24_amd64.deb
+          curl -fL --max-time 30 -O http://security.ubuntu.com/ubuntu/pool/main/o/openssl/libssl-dev_1.1.1f-1ubuntu2.24_amd64.deb
+          curl -fL --max-time 30 -O https://ports.ubuntu.com/ubuntu-ports/pool/main/o/openssl/libssl1.1_1.1.1f-1ubuntu2.24_arm64.deb
+          curl -fL --max-time 30 -O https://ports.ubuntu.com/ubuntu-ports/pool/main/o/openssl/libssl-dev_1.1.1f-1ubuntu2.24_arm64.deb
+
+          # Indentation is intentionally off due to the heredoc syntax.
+          sha256sum --check --ignore-missing << "EOF"
+        33e1678adfea3847e0bbcbb26a643fd0dad38874c9e00def0d4d61dbc589083c *libssl-dev_1.1.1f-1ubuntu2.24_amd64.deb
+        a664d282a0b19fb687c1b9f5a06abcf879bc5643c6e8be435f13c187d13a5b6a *libssl-dev_1.1.1f-1ubuntu2.24_arm64.deb
+        7cf39d70a639017d1dd7c8d36daa2258063608688e449fddf40ffdd46f992a78 *libssl1.1_1.1.1f-1ubuntu2.24_amd64.deb
+        dded4572af8b0a9e0310909f211a519cc6409fda31ea81132a77e268b0ec0f2f *libssl1.1_1.1.1f-1ubuntu2.24_arm64.deb
+        EOF
+
+          case "${{ runner.arch}}" in
+            "X64")
+              sudo apt-get install -y ./libssl1.1_1.1.1f-1ubuntu2.24_amd64.deb
+              ;;
+            "ARM64")
+              sudo apt-get install -y ./libssl1.1_1.1.1f-1ubuntu2.24_arm64.deb
+              ;;
+          esac
+        fi
+
     - name: Cache PHP
       id: cache-php
       uses: actions/cache@v4
@@ -91,6 +118,17 @@ runs:
           libxml2-dev \
           libzip-dev \
           zlib1g-dev
+
+        if dpkg --compare-versions "${{ steps.determine-php-version.outputs.version }}" lt 8.1.0; then
+          case "${{ runner.arch}}" in
+            "X64")
+              sudo apt-get install -y --allow-downgrades ./libssl-dev_1.1.1f-1ubuntu2.24_amd64.deb
+              ;;
+            "ARM64")
+              sudo apt-get install -y --allow-downgrades ./libssl-dev_1.1.1f-1ubuntu2.24_arm64.deb
+              ;;
+          esac
+        fi
 
     - if: ${{ steps.cache-php.outputs.cache-hit != 'true' }}
       shell: bash
