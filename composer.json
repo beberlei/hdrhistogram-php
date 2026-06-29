@@ -4,7 +4,7 @@
 	"license": "BSD-2-Clause",
 	"description": "A PHP extension wrapper for the C hdrhistogram API.",
 	"require": {
-		"php": ">=7.0,<8.5"
+		"php": ">=7.0,<8.6"
 	},
 	"php-ext": {
 		"extension-name": "ext-hdrhistogram",
