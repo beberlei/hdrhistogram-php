@@ -195,9 +195,13 @@ PHP_MINFO_FUNCTION(hdrhistogram)
     php_info_print_table_start();
 
     php_info_print_table_row(2, "hdrhistogram support", "enabled");
-    php_info_print_table_row(2, "Extension version", PHP_HDR_HISTOGRAM_VERSION);
+    php_info_print_table_row(2, "php-hdrhistogram version", PHP_HDR_HISTOGRAM_VERSION);
 #ifdef HDR_HISTOGRAM_VERSION
-    php_info_print_table_row(2, "Library version", HDR_HISTOGRAM_VERSION);
+# if PHP_HDRHISTOGRAM_STATIC
+    php_info_print_table_row(2, "HdrHistogram_c bundled version", HDR_HISTOGRAM_VERSION);
+# else
+    php_info_print_table_row(2, "HdrHistogram_c compiled version", HDR_HISTOGRAM_VERSION);
+# endif
 #endif
 
     php_info_print_table_end();
