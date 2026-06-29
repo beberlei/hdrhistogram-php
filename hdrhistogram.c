@@ -199,6 +199,8 @@ PHP_MINFO_FUNCTION(hdrhistogram)
 #ifdef HDR_HISTOGRAM_VERSION
     php_info_print_table_row(2, "Library version", HDR_HISTOGRAM_VERSION);
 #endif
+
+    php_info_print_table_end();
 }
 
 ZEND_METHOD(HdrHistogram_Histogram, __construct)
