@@ -9,14 +9,14 @@ permissions:
 
 jobs:
   Linux:
-    name: "${{ matrix.phpVersion }}, HDR ${{ matrix.hdrVersion }}, ${{ matrix.debug == 'sanitize' && 'Sanitizers' || (matrix.debug && 'Debug' || 'Release') }}, ${{ matrix.zts && 'ZTS' || 'NTS' }}, ${{ matrix.static && 'Static' || 'Dynamic' }}, ${{ matrix.os }}"
+    name: "${{ matrix.phpVersion }}, HDR ${{ matrix.hdrVersion }}, ${{ case(matrix.debug == 'sanitize', 'Sanitizers', matrix.debug, 'Debug', 'Release') }}, ${{ case(matrix.zts, 'ZTS', 'NTS') }}, ${{ case(matrix.static, 'Static', 'Dynamic') }}, ${{ matrix.os }}"
     runs-on: ${{ matrix.os }}
 
     strategy:
       fail-fast: false
       matrix:
         include:
-          - phpVersion: "8.5-dev"
+          - phpVersion: "8.5"
             hdrVersion: main
             os: ubuntu-24.04
             debug: true
@@ -114,7 +114,7 @@ jobs:
             static: false
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
 
     - name: Reduce ASLR entropy (ASAN)
       if: ${{ matrix.debug == 'sanitize' }}
@@ -128,13 +128,13 @@ jobs:
       with:
         version: ${{ matrix.phpVersion }}
         # https://github.com/actions/runner/issues/2238
-        type: ${{ matrix.debug == 'sanitize' && 'sanitize' || (matrix.debug && 'debug' || 'release') }}
-        zts: ${{ matrix.zts && 'zts' || 'nts' }}
+        type: ${{ case(matrix.debug == 'sanitize', 'sanitize', matrix.debug, 'debug', 'release') }}
+        ts: ${{ case(matrix.zts, 'zts', 'nts') }}
 
     - name: Install HdrHistogram_c
       uses: ./.github/actions/install-hdrhistogram-c
       with:
-        type: ${{ matrix.debug == 'sanitize' && 'sanitize' || (matrix.debug && 'debug' || 'release') }}
+        type: ${{ case(matrix.debug == 'sanitize', 'sanitize', matrix.debug, 'debug', 'release') }}
         version: ${{ matrix.hdrVersion }}
 
     - name: Add our PHP to the PATH
@@ -148,7 +148,11 @@ jobs:
         which php
         php -v
         if ! php -v |grep -q "${{ steps.install-php.outputs.version }}"; then
-          echo "ERROR: Wrong PHP version"
+          echo "ERROR: Wrong PHP version" >&2
+          exit 1
+        fi
+        if ! php -v |grep -q "${{ case(matrix.zts, 'ZTS', 'NTS') }}"; then
+          echo "ERROR: Wrong PHP thread-safety" >&2
           exit 1
         fi
         php -i
@@ -159,8 +163,8 @@ jobs:
       timeout-minutes: 1
       run: |
         ./configure \
-          ${{ matrix.static && '--with-hdrhistogram-static' || '' }} \
-          ${{ matrix.debug == 'sanitize' && 'CFLAGS="-g -fsanitize=undefined,address -DZEND_TRACK_ARENA_ALLOC" LDFLAGS="-fsanitize=undefined,address" CC=clang-16 CXX=clang++-16' || 'CFLAGS="-g"' }}
+          ${{ case(matrix.static, '--with-hdrhistogram-static', '') }} \
+          ${{ case(matrix.debug == 'sanitize', 'CFLAGS="-g -fsanitize=undefined,address -DZEND_TRACK_ARENA_ALLOC" LDFLAGS="-fsanitize=undefined,address" CC=clang-16 CXX=clang++-16', 'CFLAGS="-g"') }}
 
     - name: make
       timeout-minutes: 1
@@ -186,12 +190,14 @@ jobs:
         export TEST_PHP_EXECUTABLE="$(pwd)/php/target/bin/php"
         export TEST_PHP_CGI_EXECUTABLE="$(pwd)/php/target/bin/php-cgi"
         noProgress="$(php run-tests.php -h |grep -o -m1 -- '--no-progress' || true)"
+        asan="${{ case(matrix.debug == 'sanitize', '--asan', '') }}"
         if php run-tests.php -h |grep -q -- '--show-slow'; then
             showSlow="--show-slow 500"
         else
             showSlow=""
         fi
-        asan="${{ matrix.debug == 'sanitize' && '--asan' || '' }}"
+
+        export ZEND_MM_DEBUG="padding=64,check_freelists_on_shutdown=1"
 
         php run-tests.php $noProgress $showSlow $asan --show-diff -d extension="$(pwd)/.libs/hdrhistogram.so" -q
       env:

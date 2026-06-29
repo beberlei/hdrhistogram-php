@@ -1,13 +1,16 @@
 name: Install HdrHistogram_c
+description: ''
 inputs:
   type:
     required: true
+    description: "Should be one of 'release', 'debug', or 'sanitize'"
   version:
     required: true
+    description: "The branch or tag to checkout"
 runs:
   using: composite
   steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
       with:
         repository: HdrHistogram/HdrHistogram_c
         path: HdrHistogram_c
@@ -16,6 +19,6 @@ runs:
     - shell: bash
       working-directory: ./HdrHistogram_c/
       run: |
-        env ${{ inputs.type == 'sanitize' && 'CFLAGS="-g -O0 -fsanitize=undefined,address -DZEND_TRACK_ARENA_ALLOC" LDFLAGS="-fsanitize=undefined,address" CC=clang-16 CXX=clang++-16' || (inputs.type == 'debug' && 'CFLAGS="-g -O0"' || 'CFLAGS="-g -O2"') }} cmake .
+        env ${{ case(inputs.type == 'sanitize', 'CFLAGS="-g -O0 -fsanitize=undefined,address -DZEND_TRACK_ARENA_ALLOC" LDFLAGS="-fsanitize=undefined,address" CC=clang-16 CXX=clang++-16', inputs.type == 'debug', 'CFLAGS="-g -O0"', 'CFLAGS="-g -O2"') }} cmake .
         make VERBOSE=1
         sudo make install
