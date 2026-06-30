@@ -202,3 +202,77 @@ jobs:
         php run-tests.php $noProgress $showSlow $asan --show-diff -d extension="$(pwd)/.libs/hdrhistogram.so" -q
       env:
         REPORT_EXIT_STATUS: 1
+  PIE:
+    name: "PIE - ${{ matrix.phpVersion }}, HDR ${{ matrix.hdrVersion }}, ${{ case(matrix.zts, 'ZTS', 'NTS') }}, ${{ case(matrix.static, 'Static', 'Dynamic') }}"
+    runs-on: ubuntu-24.04
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - phpVersion: "8.5"
+            hdrVersion: main
+            zts: false
+            static: false
+          - phpVersion: "8.4"
+            hdrVersion: main
+            zts: false
+            static: false
+          - phpVersion: "8.4"
+            hdrVersion: main
+            zts: false
+            static: false
+          - phpVersion: "8.4"
+            hdrVersion: main
+            zts: true
+            static: false
+          - phpVersion: "8.4"
+            hdrVersion: main
+            zts: false
+            static: true
+          - phpVersion: "8.4"
+            hdrVersion: "0.9.8"
+            zts: false
+            static: false
+          - phpVersion: "8.3"
+            hdrVersion: main
+            zts: false
+            static: false
+          - phpVersion: "8.2"
+            hdrVersion: main
+            zts: false
+            static: false
+          - phpVersion: "8.1"
+            hdrVersion: main
+            zts: false
+            static: false
+
+    steps:
+    - uses: actions/checkout@v7
+      with:
+        fetch-depth: 0
+
+    - name: Install HdrHistogram_c
+      uses: ./.github/actions/install-hdrhistogram-c
+      with:
+        type: release
+        version: ${{ matrix.hdrVersion }}
+
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: ${{ matrix.phpVersion }}
+        tools: pie
+      env:
+        phpts: ${{ case(matrix.zts, 'zts', 'nts') }}
+
+    - name: Install with PIE
+      timeout-minutes: 1
+      run: |
+        set -ex
+
+        pie repository:add path $(pwd)
+        sudo pie install -v beberlei/hdrhistogram:dev-master#${{ github.ref }} ${{ case(matrix.static, '--with-hdrhistogram-static', '') }}
+
+        php -m |grep 'hdrhistogram'
+        php -i |grep 'hdrhistogram support'
