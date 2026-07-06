@@ -16,6 +16,13 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          - phpVersion: "8.6"
+            phpVersionSuffix: "dev"
+            hdrVersion: main
+            os: ubuntu-24.04
+            debug: true
+            zts: false
+            static: false
           - phpVersion: "8.5"
             hdrVersion: main
             os: ubuntu-24.04
@@ -126,7 +133,7 @@ jobs:
       uses: ./.github/actions/install-php
       timeout-minutes: 20
       with:
-        version: ${{ matrix.phpVersion }}
+        version: ${{ format('{0}{1}{2}', matrix.phpVersion, case(matrix.phpVersionSuffix != '', '-', ''), matrix.phpVersionSuffix || '') }}
         # https://github.com/actions/runner/issues/2238
         type: ${{ case(matrix.debug == 'sanitize', 'sanitize', matrix.debug, 'debug', 'release') }}
         ts: ${{ case(matrix.zts, 'zts', 'nts') }}
