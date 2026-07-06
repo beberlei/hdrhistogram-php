@@ -164,7 +164,7 @@ jobs:
       run: |
         ./configure \
           ${{ case(matrix.static, '--with-hdrhistogram-static', '') }} \
-          ${{ case(matrix.debug == 'sanitize', 'CFLAGS="-g -fsanitize=undefined,address -DZEND_TRACK_ARENA_ALLOC" LDFLAGS="-fsanitize=undefined,address" CC=clang-16 CXX=clang++-16', 'CFLAGS="-g"') }}
+          ${{ case(matrix.debug == 'sanitize', 'CFLAGS="-g -fsanitize=undefined,address -fno-sanitize=function -DZEND_TRACK_ARENA_ALLOC" LDFLAGS="-fsanitize=undefined,address" CC=clang CXX=clang++', 'CFLAGS="-g"') }}
 
     - name: make
       timeout-minutes: 1
