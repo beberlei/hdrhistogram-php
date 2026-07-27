@@ -156,7 +156,7 @@ runs:
           --prefix=$(pwd)/target/ \
           --with-pear \
           ${{ case(inputs.type == 'debug' || inputs.type == 'sanitize', '--enable-debug', '') }} \
-          ${{ case(inputs.type == 'sanitize', 'CFLAGS="-fsanitize=undefined,address -DZEND_TRACK_ARENA_ALLOC" LDFLAGS="-fsanitize=undefined,address" CC=clang-16 CXX=clang++-16', '') }} \
+          ${{ case(inputs.type == 'sanitize', 'CFLAGS="-fsanitize=undefined,address -fno-sanitize=function -DZEND_TRACK_ARENA_ALLOC" LDFLAGS="-fsanitize=undefined,address" CC=clang CXX=clang++', '') }} \
           ${{ case(inputs.ts == 'zts', '$zts', '') }} \
           --enable-fpm \
           --enable-soap \
