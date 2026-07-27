@@ -28,7 +28,7 @@ struct php_hdrhistogram_histogram {
 };
 
 static inline struct php_hdrhistogram_histogram *php_hdrhistogram_histogram_from_object(zend_object *object) {
-    return (struct php_hdrhistogram_histogram *)((char *)(object) - XtOffsetOf(struct php_hdrhistogram_histogram, std));
+    return (struct php_hdrhistogram_histogram *)((char *)(object) - offsetof(struct php_hdrhistogram_histogram, std));
 }
 
 static zend_object *php_hdrhistogram_histogram_new(zend_class_entry *ce)
@@ -107,7 +107,7 @@ struct php_hdrhistogram_iterator {
 };
 
 static inline struct php_hdrhistogram_iterator *php_hdrhistogram_iterator_from_object(zend_object *object) {
-    return (struct php_hdrhistogram_iterator *)((char *)(object) - XtOffsetOf(struct php_hdrhistogram_iterator, std));
+    return (struct php_hdrhistogram_iterator *)((char *)(object) - offsetof(struct php_hdrhistogram_iterator, std));
 }
 
 static zend_object *php_hdrhistogram_iterator_new(zend_class_entry *ce)
@@ -161,7 +161,7 @@ PHP_MINIT_FUNCTION(hdrhistogram)
     php_HdrHistogram_Histogram_ce = register_class_HdrHistogram_Histogram();
     php_HdrHistogram_Histogram_ce->create_object = php_hdrhistogram_histogram_new;
     memcpy(&php_hdrhistogram_histogram_object_handlers, zend_get_std_object_handlers(), sizeof(zend_object_handlers));
-    php_hdrhistogram_histogram_object_handlers.offset = XtOffsetOf(struct php_hdrhistogram_histogram, std);
+    php_hdrhistogram_histogram_object_handlers.offset = offsetof(struct php_hdrhistogram_histogram, std);
     php_hdrhistogram_histogram_object_handlers.free_obj = php_hdrhistogram_histogram_free;
     php_hdrhistogram_histogram_object_handlers.clone_obj = php_hdrhistogram_histogram_clone;
 #if PHP_VERSION_ID < 80100
@@ -172,7 +172,7 @@ PHP_MINIT_FUNCTION(hdrhistogram)
     php_HdrHistogram_Iterator_ce = register_class_HdrHistogram_Iterator();
     php_HdrHistogram_Iterator_ce->create_object = php_hdrhistogram_iterator_new;
     memcpy(&php_hdrhistogram_iterator_object_handlers, zend_get_std_object_handlers(), sizeof(zend_object_handlers));
-    php_hdrhistogram_iterator_object_handlers.offset = XtOffsetOf(struct php_hdrhistogram_iterator, std);
+    php_hdrhistogram_iterator_object_handlers.offset = offsetof(struct php_hdrhistogram_iterator, std);
     php_hdrhistogram_iterator_object_handlers.free_obj = php_hdrhistogram_iterator_free;
     php_hdrhistogram_iterator_object_handlers.clone_obj = NULL;
 #if PHP_VERSION_ID < 80100
