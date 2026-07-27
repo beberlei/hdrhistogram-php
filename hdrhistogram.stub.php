@@ -3,7 +3,7 @@
 /**
  * @generate-class-entries
  * @generate-function-entries
- * @generate-legacy-arginfo
+ * @generate-legacy-arginfo 70000
  */
 namespace {
     function hdr_init(int $lowest_trackable_value, int $highest_trackable_value, int $significant_figures): \HdrHistogram\Histogram|false {}
