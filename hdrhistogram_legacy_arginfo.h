@@ -1,5 +1,5 @@
-/* This is a generated file, edit the .stub.php file instead.
- * Stub hash: 4e91058eaa9a3defd0e052aa081bb9c4d8ea7b12 */
+/* This is a generated file, edit hdrhistogram.stub.php instead.
+ * Stub hash: a3beb842efd364ff4e3c25877e71c726d164d7e9 */
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_hdr_init, 0, 0, 3)
 	ZEND_ARG_INFO(0, lowest_trackable_value)
@@ -92,7 +92,6 @@ ZEND_BEGIN_ARG_INFO_EX(arginfo_class_HdrHistogram_Iterator_Percentile___construc
 	ZEND_ARG_INFO(0, ticksPerHalfDistance)
 ZEND_END_ARG_INFO()
 
-
 ZEND_FUNCTION(hdr_init);
 ZEND_FUNCTION(hdr_get_memory_size);
 ZEND_FUNCTION(hdr_record_value);
@@ -119,7 +118,6 @@ ZEND_FUNCTION(hdr_base64_decode);
 ZEND_METHOD(HdrHistogram_Histogram, __construct);
 ZEND_METHOD(HdrHistogram_Iterator, __construct);
 ZEND_METHOD(HdrHistogram_Iterator_Percentile, __construct);
-
 
 static const zend_function_entry ext_functions[] = {
 	ZEND_FE(hdr_init, arginfo_hdr_init)
@@ -148,18 +146,15 @@ static const zend_function_entry ext_functions[] = {
 	ZEND_FE_END
 };
 
-
 static const zend_function_entry class_HdrHistogram_Histogram_methods[] = {
 	ZEND_ME(HdrHistogram_Histogram, __construct, arginfo_class_HdrHistogram_Histogram___construct, ZEND_ACC_PUBLIC)
 	ZEND_FE_END
 };
 
-
 static const zend_function_entry class_HdrHistogram_Iterator_methods[] = {
 	ZEND_ME(HdrHistogram_Iterator, __construct, arginfo_class_HdrHistogram_Iterator___construct, ZEND_ACC_PUBLIC)
 	ZEND_FE_END
 };
-
 
 static const zend_function_entry class_HdrHistogram_Iterator_Percentile_methods[] = {
 	ZEND_ME(HdrHistogram_Iterator_Percentile, __construct, arginfo_class_HdrHistogram_Iterator_Percentile___construct, ZEND_ACC_PUBLIC)
@@ -171,12 +166,10 @@ static zend_class_entry *register_class_HdrHistogram_Histogram(void)
 	zend_class_entry ce, *class_entry;
 
 	INIT_NS_CLASS_ENTRY(ce, "HdrHistogram", "Histogram", class_HdrHistogram_Histogram_methods);
+#if (PHP_VERSION_ID >= 80400)
+	class_entry = zend_register_internal_class_with_flags(&ce, NULL, ZEND_ACC_FINAL);
+#else
 	class_entry = zend_register_internal_class_ex(&ce, NULL);
-#if (PHP_VERSION_ID >= 80100)
-	class_entry->ce_flags |= ZEND_ACC_FINAL|ZEND_ACC_NO_DYNAMIC_PROPERTIES|ZEND_ACC_NOT_SERIALIZABLE;
-#elif (PHP_VERSION_ID >= 80000)
-	class_entry->ce_flags |= ZEND_ACC_FINAL|ZEND_ACC_NO_DYNAMIC_PROPERTIES;
-#elif (PHP_VERSION_ID >= 70000)
 	class_entry->ce_flags |= ZEND_ACC_FINAL;
 #endif
 
@@ -188,12 +181,10 @@ static zend_class_entry *register_class_HdrHistogram_Iterator(void)
 	zend_class_entry ce, *class_entry;
 
 	INIT_NS_CLASS_ENTRY(ce, "HdrHistogram", "Iterator", class_HdrHistogram_Iterator_methods);
+#if (PHP_VERSION_ID >= 80400)
+	class_entry = zend_register_internal_class_with_flags(&ce, NULL, ZEND_ACC_FINAL);
+#else
 	class_entry = zend_register_internal_class_ex(&ce, NULL);
-#if (PHP_VERSION_ID >= 80100)
-	class_entry->ce_flags |= ZEND_ACC_FINAL|ZEND_ACC_NO_DYNAMIC_PROPERTIES|ZEND_ACC_NOT_SERIALIZABLE;
-#elif (PHP_VERSION_ID >= 80000)
-	class_entry->ce_flags |= ZEND_ACC_FINAL|ZEND_ACC_NO_DYNAMIC_PROPERTIES;
-#elif (PHP_VERSION_ID >= 70000)
 	class_entry->ce_flags |= ZEND_ACC_FINAL;
 #endif
 
@@ -205,12 +196,10 @@ static zend_class_entry *register_class_HdrHistogram_Iterator_Percentile(void)
 	zend_class_entry ce, *class_entry;
 
 	INIT_NS_CLASS_ENTRY(ce, "HdrHistogram\\Iterator", "Percentile", class_HdrHistogram_Iterator_Percentile_methods);
+#if (PHP_VERSION_ID >= 80400)
+	class_entry = zend_register_internal_class_with_flags(&ce, NULL, ZEND_ACC_FINAL);
+#else
 	class_entry = zend_register_internal_class_ex(&ce, NULL);
-#if (PHP_VERSION_ID >= 80100)
-	class_entry->ce_flags |= ZEND_ACC_FINAL|ZEND_ACC_NO_DYNAMIC_PROPERTIES|ZEND_ACC_NOT_SERIALIZABLE;
-#elif (PHP_VERSION_ID >= 80000)
-	class_entry->ce_flags |= ZEND_ACC_FINAL|ZEND_ACC_NO_DYNAMIC_PROPERTIES;
-#elif (PHP_VERSION_ID >= 70000)
 	class_entry->ce_flags |= ZEND_ACC_FINAL;
 #endif
 
