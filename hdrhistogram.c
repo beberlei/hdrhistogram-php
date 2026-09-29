@@ -36,9 +36,7 @@ struct php_hdrhistogram_histogram {
     zend_object std;
 };
 
-static inline struct php_hdrhistogram_histogram *php_hdrhistogram_histogram_from_object(zend_object *object) {
-    return (struct php_hdrhistogram_histogram *)((char *)(object) - offsetof(struct php_hdrhistogram_histogram, std));
-}
+#define php_hdrhistogram_histogram_from_object(obj) ZEND_CONTAINER_OF(obj, struct php_hdrhistogram_histogram, std)
 
 static zend_object *php_hdrhistogram_histogram_new(zend_class_entry *ce)
 {
