@@ -10,6 +10,7 @@ if test "$PHP_HDRHISTOGRAM" != "no"; then
 
     if test "$PHP_HDRHISTOGRAM_STATIC" = "yes"; then
         LIBNAME=hdr_histogram_static
+        AC_DEFINE([PHP_HDRHISTOGRAM_STATIC], 1, [Enable static linking of libhdr_histogram])
     else
         LIBNAME=hdr_histogram
     fi
