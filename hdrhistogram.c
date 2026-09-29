@@ -19,6 +19,15 @@
 #include "hdrhistogram_arginfo.h"
 #endif
 
+#if PHP_VERSION_ID < 80600
+# define ZEND_CONTAINER_OF(ptr, Type, member) \
+    _Generic( \
+        (ptr), \
+        const typeof(((Type*)0)->member) *: ((const Type*)((char*)(ptr) - offsetof(Type, member))), \
+        typeof(((Type*)0)->member) *: ((Type*)((char*)(ptr) - offsetof(Type, member))) \
+    )
+#endif
+
 static zend_class_entry *php_HdrHistogram_Histogram_ce;
 static zend_object_handlers php_hdrhistogram_histogram_object_handlers;
 
@@ -27,9 +36,7 @@ struct php_hdrhistogram_histogram {
     zend_object std;
 };
 
-static inline struct php_hdrhistogram_histogram *php_hdrhistogram_histogram_from_object(zend_object *object) {
-    return (struct php_hdrhistogram_histogram *)((char *)(object) - offsetof(struct php_hdrhistogram_histogram, std));
-}
+#define php_hdrhistogram_histogram_from_object(obj) ZEND_CONTAINER_OF(obj, struct php_hdrhistogram_histogram, std)
 
 static zend_object *php_hdrhistogram_histogram_new(zend_class_entry *ce)
 {
